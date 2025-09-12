@@ -1,0 +1,7 @@
+node_modules
+yarn.lock
+.DS_Store
+.env
+env.example
+# Ignore all env files
+.env*
