@@ -3,6 +3,37 @@ import { CustomValidationError } from '../exceptions/custom-validation-error.js'
 import PasswordUtils from '../utils/password-utils.js';
 
 class AuthRequest {
+  // Validate login request
+  static validateLogin(data) {
+    const schema = Joi.object({
+      email: Joi.string()
+        .email()
+        .trim()
+        .lowercase()
+        .required()
+        .messages({
+          'string.email': 'Please enter a valid email address',
+          'string.empty': 'Email is required',
+          'any.required': 'Email is required'
+        }),
+      
+      password: Joi.string()
+        .required()
+        .messages({
+          'string.empty': 'Password is required',
+          'any.required': 'Password is required'
+        })
+    });
+
+    const { error, value } = schema.validate(data, { abortEarly: false });
+
+    if (error) {
+      throw CustomValidationError.fromJoiError(error);
+    }
+
+    return value;
+  }
+
   // Validate signup request
   static validateSignup(data) {
     const schema = Joi.object({

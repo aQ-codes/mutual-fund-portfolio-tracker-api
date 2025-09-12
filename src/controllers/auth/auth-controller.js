@@ -5,6 +5,55 @@ import JwtService from '../../services/jwt-service.js';
 import { CustomValidationError } from '../../exceptions/custom-validation-error.js';
 
 class AuthController {
+  // User login
+  async login(req, res) {
+    try {
+      // Validate request data
+      const validatedData = AuthRequest.validateLogin(req.body);
+      
+      // Find user by email
+      const user = await UserRepository.findByEmail(validatedData.email);
+      if (!user) {
+        return res.status(401).json(
+          AuthResponse.formatErrorResponse('Invalid email or password')
+        );
+      }
+      
+      // Verify password
+      const isPasswordValid = await user.comparePassword(validatedData.password);
+      if (!isPasswordValid) {
+        return res.status(401).json(
+          AuthResponse.formatErrorResponse('Invalid email or password')
+        );
+      }
+      
+      // Generate JWT token
+      const token = JwtService.generateToken(
+        user._id.toString(),
+        user.email,
+        user.role
+      );
+      
+      // Return success response with token
+      res.status(200).json(
+        AuthResponse.formatLoginResponse(user, token)
+      );
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      
+      if (error instanceof CustomValidationError) {
+        return res.status(400).json(
+          AuthResponse.formatErrorResponse('Validation failed', error.errors)
+        );
+      }
+      
+      res.status(500).json(
+        AuthResponse.formatErrorResponse('Login failed. Please try again.')
+      );
+    }
+  }
+
   // User signup
   async signup(req, res) {
     try {

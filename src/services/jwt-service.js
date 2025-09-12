@@ -11,7 +11,7 @@ class JwtService {
     };
 
     const options = {
-      expiresIn: '7d', // Token expires in 7 days
+      expiresIn: '24h', // Token expires in 24 hours as per requirements
       issuer: 'mutual-fund-tracker'
     };
 

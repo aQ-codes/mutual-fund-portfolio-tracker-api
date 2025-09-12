@@ -1,4 +1,19 @@
 class AuthResponse {
+  // Format successful login response
+  static formatLoginResponse(user, token) {
+    return {
+      success: true,
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    };
+  }
+
   // Format successful signup response
   static formatSignupResponse(user, token) {
     return {
