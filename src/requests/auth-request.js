@@ -74,7 +74,7 @@ class AuthRequest {
       throw CustomValidationError.fromJoiError(error);
     }
 
-    // Additional password strength validation using utility
+    //  password strength validation using utility
     const passwordValidation = PasswordUtils.validatePasswordStrength(value.password);
     if (!passwordValidation.isValid) {
       throw new CustomValidationError([passwordValidation.message]);

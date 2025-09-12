@@ -1,6 +1,7 @@
 import FundRepository from '../repositories/fund-repository.js';
 import FundRequest from '../requests/fund-request.js';
 import FundResponse from '../responses/fund-response.js';
+import NavService from '../services/nav-service.js';
 import { CustomValidationError } from '../exceptions/custom-validation-error.js';
 
 class FundController {
@@ -191,6 +192,57 @@ class FundController {
       
       res.status(500).json(
         FundResponse.formatErrorResponse('Failed to fetch statistics. Please try again.')
+      );
+    }
+  }
+
+  // GET /api/funds/:schemeCode/nav - Get fund NAV and history
+  async getFundNav(req, res) {
+    try {
+      // Validate scheme code
+      const schemeCode = FundRequest.validateSchemeCode(parseInt(req.params.schemeCode));
+      
+      // Validate query parameters for history
+      const options = FundRequest.validateNavQuery(req.query);
+      
+      // Get fund with NAV
+      const fundResult = await NavService.getFundWithNav(schemeCode);
+      
+      if (!fundResult.success) {
+        return res.status(404).json(
+          FundResponse.formatNotFoundResponse('Fund')
+        );
+      }
+      
+      // Get NAV history if requested
+      let history = null;
+      if (options.includeHistory) {
+        const historyResult = await NavService.getNavHistory(schemeCode, {
+          days: options.days,
+          source: options.source
+        });
+        
+        if (historyResult.success) {
+          history = historyResult.data.history;
+        }
+      }
+      
+      // Return successful response
+      res.status(200).json(
+        FundResponse.formatFundNavResponse(fundResult.data, history)
+      );
+      
+    } catch (error) {
+      console.error('Get fund NAV error:', error);
+      
+      if (error instanceof CustomValidationError) {
+        return res.status(400).json(
+          FundResponse.formatValidationErrorResponse('Invalid parameters', error.errors)
+        );
+      }
+      
+      res.status(500).json(
+        FundResponse.formatErrorResponse('Failed to fetch fund NAV. Please try again.')
       );
     }
   }

@@ -216,6 +216,33 @@ class FundRequest {
 
     return value;
   }
+
+  // Validate NAV query parameters
+  static validateNavQuery(data) {
+    const schema = Joi.object({
+      includeHistory: Joi.boolean().default(true),
+      days: Joi.number().integer().min(1).max(365).default(30),
+      source: Joi.string().valid('database', 'api', 'auto').default('auto')
+    });
+
+    const { error, value } = schema.validate(data, {
+      abortEarly: false,
+      allowUnknown: false,
+      stripUnknown: true
+    });
+
+    if (error) {
+      throw new CustomValidationError(
+        'NAV query validation failed',
+        error.details.map(detail => ({
+          field: detail.path.join('.'),
+          message: detail.message
+        }))
+      );
+    }
+
+    return value;
+  }
 }
 
 export default FundRequest;

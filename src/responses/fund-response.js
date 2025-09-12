@@ -109,6 +109,30 @@ class FundResponse {
     };
   }
 
+  // Format fund NAV response with history
+  static formatFundNavResponse(fundData, history = null) {
+    const { fund, nav, navError } = fundData;
+    
+    return {
+      success: true,
+      data: {
+        schemeCode: fund.schemeCode,
+        schemeName: fund.schemeName,
+        fundHouse: fund.fundHouse,
+        schemeCategory: fund.schemeCategory,
+        currentNav: nav ? FormatUtils.formatNav(nav.nav) : null,
+        asOn: nav ? nav.date : null,
+        navSource: nav ? nav.source : null,
+        navUpdatedAt: nav ? nav.updatedAt : null,
+        navError: navError || null,
+        history: history ? history.map(item => ({
+          date: item.date,
+          nav: FormatUtils.formatNav(item.nav)
+        })) : null
+      }
+    };
+  }
+
   // Format fund categories response
   static formatCategoriesResponse(categories) {
     return {

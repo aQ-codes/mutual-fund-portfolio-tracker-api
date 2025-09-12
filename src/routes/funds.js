@@ -19,6 +19,9 @@ router.get('/fund-houses', fundController.getFundHouses.bind(fundController));
 // GET /api/funds/stats - Get fund statistics
 router.get('/stats', fundController.getFundStats.bind(fundController));
 
+// GET /api/funds/:schemeCode/nav - Get fund NAV and history
+router.get('/:schemeCode/nav', fundController.getFundNav.bind(fundController));
+
 // GET /api/funds/:schemeCode - Get single fund by scheme code (must be last)
 router.get('/:schemeCode', fundController.getFundBySchemeCode.bind(fundController));
 
