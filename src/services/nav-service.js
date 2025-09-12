@@ -328,6 +328,80 @@ class NavService {
     
     return results;
   }
+
+  /**
+   * Get latest NAVs for multiple scheme codes
+   * @param {number[]} schemeCodes - Array of scheme codes
+   * @returns {Promise<Object[]>} Array of latest NAV data
+   */
+  static async bulkGetLatestNavs(schemeCodes) {
+    if (!schemeCodes || schemeCodes.length === 0) {
+      return [];
+    }
+
+    try {
+      // Get latest NAVs from database first
+      const latestNavs = await LatestNav.find({ 
+        schemeCode: { $in: schemeCodes } 
+      });
+
+      const results = [];
+      const missingSchemes = [];
+
+      // Check which schemes have data in database
+      schemeCodes.forEach(schemeCode => {
+        const navData = latestNavs.find(nav => nav.schemeCode === schemeCode);
+        if (navData) {
+          results.push({
+            schemeCode: navData.schemeCode,
+            nav: navData.nav,
+            date: navData.date
+          });
+        } else {
+          missingSchemes.push(schemeCode);
+        }
+      });
+
+      // Fetch missing NAVs from API if needed
+      if (missingSchemes.length > 0) {
+        console.log(`Fetching NAVs from API for ${missingSchemes.length} schemes`);
+        
+        for (const schemeCode of missingSchemes) {
+          try {
+            const navData = await this.fetchLatestNav(schemeCode);
+            if (navData && navData.nav) {
+              // Save to database
+              await this.saveLatestNav(schemeCode, navData.nav, navData.date);
+              
+              results.push({
+                schemeCode,
+                nav: navData.nav,
+                date: navData.date
+              });
+            }
+          } catch (error) {
+            console.error(`Failed to fetch NAV for scheme ${schemeCode}:`, error.message);
+            // Add placeholder with 0 NAV to prevent errors
+            results.push({
+              schemeCode,
+              nav: 0,
+              date: new Date().toISOString().split('T')[0]
+            });
+          }
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error in bulkGetLatestNavs:', error);
+      // Return empty NAVs to prevent errors
+      return schemeCodes.map(schemeCode => ({
+        schemeCode,
+        nav: 0,
+        date: new Date().toISOString().split('T')[0]
+      }));
+    }
+  }
 }
 
 export default NavService;
