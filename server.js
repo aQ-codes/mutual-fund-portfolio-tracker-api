@@ -3,6 +3,7 @@ import cors from 'cors';
 import connectDB from './src/config/db.js';
 import config from './src/config/env.js';
 import configureRoutes from './src/routes/routes.js';
+import CronService from './src/services/cron-service.js';
 
 const app = express();
 const PORT = config.port;
@@ -58,11 +59,37 @@ const startServer = async () => {
   try {
     await connectDB();
     
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    // Initialize cron jobs after database connection
+    CronService.init();
+    
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌍 Environment: ${config.nodeEnv}`);
     });
+
+    // Graceful shutdown handler
+    const gracefulShutdown = (signal) => {
+      console.log(`\n📡 Received ${signal}. Starting graceful shutdown...`);
+      
+      // Stop accepting new connections
+      server.close(() => {
+        console.log('🛑 HTTP server closed.');
+        
+        // Destroy all cron jobs
+        CronService.destroyAll();
+        
+        // Close database connection
+        console.log('💾 Database connection closed.');
+        process.exit(0);
+      });
+    };
+
+    // Handle shutdown signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('💥 Failed to start server:', error);
     process.exit(1);
   }
 };

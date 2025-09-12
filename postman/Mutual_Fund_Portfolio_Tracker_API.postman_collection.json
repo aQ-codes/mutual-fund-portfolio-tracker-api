@@ -1,0 +1,689 @@
+{
+	"info": {
+		"_postman_id": "mutual-fund-portfolio-tracker-api",
+		"name": "Mutual Fund Portfolio Tracker API",
+		"description": "Complete API collection for the Mutual Fund Portfolio Tracker application. This collection includes authentication, fund management, portfolio operations, and admin endpoints with prefilled examples and test data.\n\n## Base URL\n- Development: `http://localhost:5000/api`\n- Production: `{{base_url}}/api`\n\n## Authentication\nMost endpoints require JWT authentication. After login, the token is automatically set in the `auth_token` variable.\n\n## Environment Variables\n- `base_url`: API base URL\n- `auth_token`: JWT token (auto-set after login)\n- `user_id`: Current user ID (auto-set after login)\n- `scheme_code`: Sample scheme code for testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "User Signup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('auth_token', response.token);",
+									"    pm.environment.set('user_id', response.user.id);",
+									"    pm.test('User registered successfully', () => {",
+									"        pm.expect(response.success).to.be.true;",
+									"        pm.expect(response.token).to.exist;",
+									"    });",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/signup",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					}
+				},
+				{
+					"name": "User Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('auth_token', response.token);",
+									"    pm.environment.set('user_id', response.user.id);",
+									"    pm.test('Login successful', () => {",
+									"        pm.expect(response.success).to.be.true;",
+									"        pm.expect(response.token).to.exist;",
+									"    });",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Funds",
+			"item": [
+				{
+					"name": "Get All Funds",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.test('Funds retrieved successfully', () => {",
+									"        pm.expect(response.success).to.be.true;",
+									"        pm.expect(response.data.funds).to.be.an('array');",
+									"    });",
+									"    if (response.data.funds.length > 0) {",
+									"        pm.environment.set('scheme_code', response.data.funds[0].schemeCode);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/funds?page=1&limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"funds"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Search Funds",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/funds?search=bluechip&page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"funds"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "bluechip"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Fund NAV History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/funds/{{scheme_code}}/nav?includeHistory=true&days=30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"funds",
+								"{{scheme_code}}",
+								"nav"
+							],
+							"query": [
+								{
+									"key": "includeHistory",
+									"value": "true"
+								},
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Portfolio",
+			"item": [
+				{
+					"name": "Add Fund to Portfolio",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.test('Fund added to portfolio successfully', () => {",
+									"        pm.expect(response.success).to.be.true;",
+									"        pm.expect(response.portfolio).to.exist;",
+									"    });",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"schemeCode\": {{scheme_code}},\n  \"units\": 100.5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/portfolio/add",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"portfolio",
+								"add"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Portfolio Value",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/portfolio/value",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"portfolio",
+								"value"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Portfolio List",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/portfolio/list",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"portfolio",
+								"list"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Portfolio History",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/portfolio/history?days=30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"portfolio",
+								"history"
+							],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Remove Fund from Portfolio",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/portfolio/remove/{{scheme_code}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"portfolio",
+								"remove",
+								"{{scheme_code}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/users?page=1&limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Search Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/users?search=john&role=user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"users"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "john"
+								},
+								{
+									"key": "role",
+									"value": "user"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Portfolios",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/portfolios?page=1&limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"portfolios"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Popular Funds",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/popular-funds?limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"popular-funds"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get System Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"stats"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Cron Job Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/cron-status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"cron-status"
+							]
+						}
+					}
+				},
+				{
+					"name": "Manual NAV Update",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/cron/run-nav-update",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"cron",
+								"run-nav-update"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "System",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					}
+				},
+				{
+					"name": "API Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set base URL if not already set",
+					"if (!pm.environment.get('base_url')) {",
+					"    pm.environment.set('base_url', 'http://localhost:5000/api');",
+					"}",
+					"",
+					"// Set sample scheme code if not already set",
+					"if (!pm.environment.get('scheme_code')) {",
+					"    pm.environment.set('scheme_code', '152075');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000/api",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "scheme_code",
+			"value": "152075",
+			"type": "string"
+		}
+	]
+}

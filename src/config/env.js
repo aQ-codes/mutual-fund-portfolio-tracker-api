@@ -26,6 +26,9 @@ const config = {
   // Pagination (from full-project)
   defaultPageSize: 20,
   maxPageSize: 100,
+  
+  // Cron Jobs
+  cronSchedule: process.env.CRON_SCHEDULE || '0 0 * * *', // Daily at 12:00 AM IST
 };
 
 // Validation (from full-project)

@@ -1,6 +1,7 @@
 import authRoutes from './auth.js';
 import fundRoutes from './funds.js';
 import portfolioRoutes from './portfolio.js';
+import adminRoutes from './admin.js';
 
 const configureRoutes = (app) => {
   // API version prefix
@@ -19,6 +20,7 @@ const configureRoutes = (app) => {
         auth: `${API_PREFIX}/auth`,
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
+        admin: `${API_PREFIX}/admin`,
         health: '/health'
       }
     });
@@ -28,6 +30,7 @@ const configureRoutes = (app) => {
   app.use(`${API_PREFIX}/auth`, authRoutes);
   app.use(`${API_PREFIX}/funds`, fundRoutes);
   app.use(`${API_PREFIX}/portfolio`, portfolioRoutes);
+  app.use(`${API_PREFIX}/admin`, adminRoutes);
   
   // API route not found handler
   app.use(`${API_PREFIX}/*`, (req, res) => {
@@ -38,6 +41,7 @@ const configureRoutes = (app) => {
         auth: `${API_PREFIX}/auth`,
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
+        admin: `${API_PREFIX}/admin`,
         health: '/health'
       }
     });

@@ -402,6 +402,58 @@ class NavService {
       }));
     }
   }
+
+  /**
+   * Save latest NAV to database
+   * @param {number} schemeCode - Scheme code
+   * @param {number} nav - NAV value
+   * @param {string} date - Date in DD-MM-YYYY format
+   */
+  static async saveLatestNav(schemeCode, nav, date) {
+    try {
+      await LatestNav.findOneAndUpdate(
+        { schemeCode },
+        { 
+          schemeCode,
+          nav: parseFloat(nav),
+          date,
+          updatedAt: new Date()
+        },
+        { 
+          upsert: true,
+          new: true
+        }
+      );
+    } catch (error) {
+      console.error(`Error saving latest NAV for scheme ${schemeCode}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save NAV to history collection
+   * @param {number} schemeCode - Scheme code
+   * @param {number} nav - NAV value
+   * @param {string} date - Date in DD-MM-YYYY format
+   */
+  static async saveNavHistory(schemeCode, nav, date) {
+    try {
+      // Check if entry already exists for this date
+      const existing = await FundHistory.findOne({ schemeCode, date });
+      
+      if (!existing) {
+        await FundHistory.create({
+          schemeCode,
+          nav: parseFloat(nav),
+          date,
+          createdAt: new Date()
+        });
+      }
+    } catch (error) {
+      console.error(`Error saving NAV history for scheme ${schemeCode}:`, error);
+      throw error;
+    }
+  }
 }
 
 export default NavService;
