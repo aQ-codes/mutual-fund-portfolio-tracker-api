@@ -1,4 +1,5 @@
 import authRoutes from './auth.js';
+import fundRoutes from './funds.js';
 
 const configureRoutes = (app) => {
   // API version prefix
@@ -15,6 +16,7 @@ const configureRoutes = (app) => {
       status: 'Database connected and server running',
       endpoints: {
         auth: `${API_PREFIX}/auth`,
+        funds: `${API_PREFIX}/funds`,
         health: '/health'
       }
     });
@@ -22,6 +24,7 @@ const configureRoutes = (app) => {
   
   // Configure route groups
   app.use(`${API_PREFIX}/auth`, authRoutes);
+  app.use(`${API_PREFIX}/funds`, fundRoutes);
   
   // API route not found handler
   app.use(`${API_PREFIX}/*`, (req, res) => {
@@ -30,6 +33,7 @@ const configureRoutes = (app) => {
       message: `API endpoint ${req.originalUrl} not found`,
       availableEndpoints: {
         auth: `${API_PREFIX}/auth`,
+        funds: `${API_PREFIX}/funds`,
         health: '/health'
       }
     });
