@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import connectDB from './src/config/db.js';
 import config from './src/config/env.js';
+import configureRoutes from './src/routes/routes.js';
 
 const app = express();
 const PORT = config.port;
@@ -17,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     message: 'Mutual Fund Portfolio Tracker API is running',
     timestamp: new Date().toISOString(),
@@ -25,13 +26,22 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Basic API info endpoint
-app.get('/api', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Mutual Fund Portfolio Tracker API',
-    version: '1.0.0',
-    status: 'Database connected and server running'
+// Configure all routes
+configureRoutes(app);
+
+// Global error handler
+app.use((error, req, res, next) => {
+  console.error('Global Error:', error);
+  
+  // Don't expose error details in production
+  const message = config.nodeEnv === 'production' 
+    ? 'Something went wrong!' 
+    : error.message;
+  
+  res.status(error.status || 500).json({
+    success: false,
+    message,
+    ...(config.nodeEnv === 'development' && { stack: error.stack })
   });
 });
 
@@ -49,12 +59,10 @@ const startServer = async () => {
     await connectDB();
     
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌐 Health check: http://localhost:${PORT}/health`);
-      console.log(`📡 API info: http://localhost:${PORT}/api`);
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
