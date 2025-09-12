@@ -1,6 +1,6 @@
 import UserRepository from '../../repositories/user-repository.js';
-import AuthRequest from '../../requests/auth-request.js';
-import AuthResponse from '../../responses/auth-response.js';
+import AuthRequest from '../../requests/user/auth-request.js';
+import AuthResponse from '../../responses/user/auth-response.js';
 import JwtService from '../../services/jwt-service.js';
 import { CustomValidationError } from '../../exceptions/custom-validation-error.js';
 

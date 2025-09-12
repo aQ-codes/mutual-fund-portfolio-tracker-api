@@ -17,16 +17,6 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Mutual Fund Portfolio Tracker API is running',
-    timestamp: new Date().toISOString(),
-    environment: config.nodeEnv
-  });
-});
-
 // Configure all routes
 configureRoutes(app);
 

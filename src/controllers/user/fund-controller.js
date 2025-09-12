@@ -1,8 +1,8 @@
-import FundRepository from '../repositories/fund-repository.js';
-import FundRequest from '../requests/fund-request.js';
-import FundResponse from '../responses/fund-response.js';
-import NavService from '../services/nav-service.js';
-import { CustomValidationError } from '../exceptions/custom-validation-error.js';
+import FundRepository from '../../repositories/user/fund-repository.js';
+import FundRequest from '../../requests/user/fund-request.js';
+import FundResponse from '../../responses/user/fund-response.js';
+import NavService from '../../services/nav-service.js';
+import { CustomValidationError } from '../../exceptions/custom-validation-error.js';
 
 class FundController {
   // GET /api/funds - Get all funds with pagination and filters
@@ -50,15 +50,26 @@ class FundController {
   // GET /api/funds/:schemeCode - Get single fund by scheme code
   async getFundBySchemeCode(req, res) {
     try {
+      const { schemeCode } = req.params;
+      
       // Validate scheme code
-      const schemeCode = FundRequest.validateSchemeCode(parseInt(req.params.schemeCode));
+      const validationResult = FundRequest.validateSchemeCode(schemeCode);
+      if (!validationResult.isValid) {
+        throw new CustomValidationError('Invalid scheme code', validationResult.errors);
+      }
       
       // Fetch fund from repository
       const result = await FundRepository.getFundBySchemeCode(schemeCode);
       
       if (!result.status) {
+        return res.status(500).json(
+          FundResponse.formatErrorResponse('Failed to fetch fund details', result.message)
+        );
+      }
+      
+      if (!result.data) {
         return res.status(404).json(
-          FundResponse.formatNotFoundResponse('Fund')
+          FundResponse.formatErrorResponse('Fund not found', 'No fund exists with the provided scheme code')
         );
       }
       
@@ -72,24 +83,24 @@ class FundController {
       
       if (error instanceof CustomValidationError) {
         return res.status(400).json(
-          FundResponse.formatValidationErrorResponse('Invalid scheme code', error.errors)
+          FundResponse.formatValidationErrorResponse('Invalid request parameters', error.errors)
         );
       }
       
       res.status(500).json(
-        FundResponse.formatErrorResponse('Failed to fetch fund. Please try again.')
+        FundResponse.formatErrorResponse('Failed to fetch fund details. Please try again.')
       );
     }
   }
 
-  // GET /api/funds/search - Search funds
+  // GET /api/funds/search - Search funds by name or scheme code
   async searchFunds(req, res) {
     try {
-      // Validate search parameters
-      const validatedQuery = FundRequest.validateFundSearch(req.query);
+      // Validate search query
+      const validatedQuery = FundRequest.validateSearchQuery(req.query);
       
-      // Search funds from repository
-      const result = await FundRepository.searchFunds(validatedQuery.q, validatedQuery);
+      // Perform search
+      const result = await FundRepository.searchFunds(validatedQuery);
       
       if (!result.status) {
         return res.status(500).json(
@@ -100,13 +111,13 @@ class FundController {
       // Check if no results found
       if (result.data.funds.length === 0) {
         return res.status(200).json(
-          FundResponse.formatEmptyResultsResponse(`No funds found for "${validatedQuery.q}"`)
+          FundResponse.formatEmptyResultsResponse('No funds found matching your search criteria')
         );
       }
       
       // Return successful response
       res.status(200).json(
-        FundResponse.formatFundSearchResponse(result.data, validatedQuery.q)
+        FundResponse.formatSearchResultsResponse(result.data)
       );
       
     } catch (error) {
@@ -127,23 +138,23 @@ class FundController {
   // GET /api/funds/categories - Get all fund categories
   async getFundCategories(req, res) {
     try {
-      const result = await FundRepository.getFundStats();
+      const result = await FundRepository.getFundCategories();
       
       if (!result.status) {
         return res.status(500).json(
-          FundResponse.formatErrorResponse('Failed to fetch categories', result.message)
+          FundResponse.formatErrorResponse('Failed to fetch fund categories', result.message)
         );
       }
       
       res.status(200).json(
-        FundResponse.formatCategoriesResponse(result.data.categories)
+        FundResponse.formatCategoriesResponse(result.data)
       );
       
     } catch (error) {
       console.error('Get fund categories error:', error);
       
       res.status(500).json(
-        FundResponse.formatErrorResponse('Failed to fetch categories. Please try again.')
+        FundResponse.formatErrorResponse('Failed to fetch fund categories. Please try again.')
       );
     }
   }
@@ -151,7 +162,7 @@ class FundController {
   // GET /api/funds/fund-houses - Get all fund houses
   async getFundHouses(req, res) {
     try {
-      const result = await FundRepository.getFundStats();
+      const result = await FundRepository.getFundHouses();
       
       if (!result.status) {
         return res.status(500).json(
@@ -160,7 +171,7 @@ class FundController {
       }
       
       res.status(200).json(
-        FundResponse.formatFundHousesResponse(result.data.fundHouses)
+        FundResponse.formatFundHousesResponse(result.data)
       );
       
     } catch (error) {
@@ -179,19 +190,19 @@ class FundController {
       
       if (!result.status) {
         return res.status(500).json(
-          FundResponse.formatErrorResponse('Failed to fetch statistics', result.message)
+          FundResponse.formatErrorResponse('Failed to fetch fund statistics', result.message)
         );
       }
       
       res.status(200).json(
-        FundResponse.formatFundStatsResponse(result.data)
+        FundResponse.formatStatsResponse(result.data)
       );
       
     } catch (error) {
       console.error('Get fund stats error:', error);
       
       res.status(500).json(
-        FundResponse.formatErrorResponse('Failed to fetch statistics. Please try again.')
+        FundResponse.formatErrorResponse('Failed to fetch fund statistics. Please try again.')
       );
     }
   }
@@ -199,37 +210,32 @@ class FundController {
   // GET /api/funds/:schemeCode/nav - Get fund NAV and history
   async getFundNav(req, res) {
     try {
+      const { schemeCode } = req.params;
+      const { days = 30 } = req.query;
+      
       // Validate scheme code
-      const schemeCode = FundRequest.validateSchemeCode(parseInt(req.params.schemeCode));
+      const validationResult = FundRequest.validateSchemeCode(schemeCode);
+      if (!validationResult.isValid) {
+        throw new CustomValidationError('Invalid scheme code', validationResult.errors);
+      }
       
-      // Validate query parameters for history
-      const options = FundRequest.validateNavQuery(req.query);
+      // Get NAV data
+      const result = await NavService.getFundNavWithHistory(schemeCode, parseInt(days));
       
-      // Get fund with NAV
-      const fundResult = await NavService.getFundWithNav(schemeCode);
-      
-      if (!fundResult.success) {
-        return res.status(404).json(
-          FundResponse.formatNotFoundResponse('Fund')
+      if (!result.status) {
+        return res.status(500).json(
+          FundResponse.formatErrorResponse('Failed to fetch NAV data', result.message)
         );
       }
       
-      // Get NAV history if requested
-      let history = null;
-      if (options.includeHistory) {
-        const historyResult = await NavService.getNavHistory(schemeCode, {
-          days: options.days,
-          source: options.source
-        });
-        
-        if (historyResult.success) {
-          history = historyResult.data.history;
-        }
+      if (!result.data) {
+        return res.status(404).json(
+          FundResponse.formatErrorResponse('NAV data not found', 'No NAV data available for this fund')
+        );
       }
       
-      // Return successful response
       res.status(200).json(
-        FundResponse.formatFundNavResponse(fundResult.data, history)
+        FundResponse.formatNavResponse(result.data)
       );
       
     } catch (error) {
@@ -237,12 +243,12 @@ class FundController {
       
       if (error instanceof CustomValidationError) {
         return res.status(400).json(
-          FundResponse.formatValidationErrorResponse('Invalid parameters', error.errors)
+          FundResponse.formatValidationErrorResponse('Invalid request parameters', error.errors)
         );
       }
       
       res.status(500).json(
-        FundResponse.formatErrorResponse('Failed to fetch fund NAV. Please try again.')
+        FundResponse.formatErrorResponse('Failed to fetch NAV data. Please try again.')
       );
     }
   }

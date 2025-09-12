@@ -1,10 +1,10 @@
 import User from '../../models/user.js';
-import Portfolio from '../../models/Portfolio.js';
-import Transaction from '../../models/Transaction.js';
-import Fund from '../../models/Fund.js';
-import LatestNav from '../../models/LatestNav.js';
+import Portfolio from '../../models/portfolio.js';
+import Transaction from '../../models/transaction.js';
+import Fund from '../../models/fund.js';
+import LatestNav from '../../models/latestNav.js';
 import AdminRequest from '../../requests/admin/admin-request.js';
-import AdminResponse from '../../responses/admin-response.js';
+import AdminResponse from '../../responses/admin/admin-response.js';
 import CronService from '../../services/cron-service.js';
 import CustomValidationError from '../../exceptions/custom-validation-error.js';
 

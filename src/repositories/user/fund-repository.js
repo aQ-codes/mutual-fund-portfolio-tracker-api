@@ -1,5 +1,5 @@
-import Fund from '../models/Fund.js';
-import { CustomValidationError } from '../exceptions/custom-validation-error.js';
+import Fund from '../../models/fund.js';
+import { CustomValidationError } from '../../exceptions/custom-validation-error.js';
 
 class FundRepository {
   // Create or update fund

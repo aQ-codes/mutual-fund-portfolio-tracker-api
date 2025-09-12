@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
-import Fund from '../models/Fund.js';
-import FundHistory from '../models/FundHistory.js';
-import LatestNav from '../models/LatestNav.js';
+import Fund from '../models/fund.js';
+import FundHistory from '../models/fundHistory.js';
+import LatestNav from '../models/latestNav.js';
 import ExternalNavApi from '../api/externalNavApi.js';
 import config from '../config/env.js';
 

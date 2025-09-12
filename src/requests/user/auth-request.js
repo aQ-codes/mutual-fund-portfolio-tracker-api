@@ -1,6 +1,6 @@
 import Joi from 'joi';
-import { CustomValidationError } from '../exceptions/custom-validation-error.js';
-import PasswordUtils from '../utils/password-utils.js';
+import { CustomValidationError } from '../../exceptions/custom-validation-error.js';
+import PasswordUtils from '../../utils/password-utils.js';
 
 class AuthRequest {
   // Validate login request

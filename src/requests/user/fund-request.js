@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { CustomValidationError } from '../exceptions/custom-validation-error.js';
+import { CustomValidationError } from '../../exceptions/custom-validation-error.js';
 
 class FundRequest {
   // Validate fund query parameters

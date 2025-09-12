@@ -1,13 +1,28 @@
-import authRoutes from './auth.js';
+import config from '../config/env.js';
+import authRoutes from './user/auth.js';
 import fundRoutes from './funds.js';
-import portfolioRoutes from './portfolio.js';
-import adminRoutes from './admin.js';
+import portfolioRoutes from './user/portfolio.js';
+import adminRoutes from './admin/admin.js';
 
 const configureRoutes = (app) => {
   // API version prefix
   const API_PREFIX = '/api';
   
-  // Health check route (no prefix) - already handled in server.js
+  // Root route
+  app.get('/', (req, res) => {
+    res.status(200).json({
+      success: true,
+      message: 'Mutual Fund Portfolio Tracker API',
+      version: '1.0.0',
+      environment: config.nodeEnv,
+      endpoints: {
+        auth: `${API_PREFIX}/auth`,
+        funds: `${API_PREFIX}/funds`,
+        portfolio: `${API_PREFIX}/portfolio`,
+        admin: `${API_PREFIX}/admin`
+      }
+    });
+  });
   
   // API information route
   app.get(API_PREFIX, (req, res) => {
@@ -20,8 +35,7 @@ const configureRoutes = (app) => {
         auth: `${API_PREFIX}/auth`,
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
-        admin: `${API_PREFIX}/admin`,
-        health: '/health'
+        admin: `${API_PREFIX}/admin`
       }
     });
   });
@@ -41,8 +55,7 @@ const configureRoutes = (app) => {
         auth: `${API_PREFIX}/auth`,
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
-        admin: `${API_PREFIX}/admin`,
-        health: '/health'
+        admin: `${API_PREFIX}/admin`
       }
     });
   });

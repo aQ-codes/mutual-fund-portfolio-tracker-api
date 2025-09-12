@@ -1,4 +1,4 @@
-import FormatUtils from '../utils/format-utils.js';
+import FormatUtils from '../../utils/format-utils.js';
 
 class FundResponse {
   // Format successful funds list response
@@ -32,13 +32,12 @@ class FundResponse {
   }
 
   // Format fund search response
-  static formatFundSearchResponse(searchData, searchQuery) {
+  static formatSearchResultsResponse(searchData) {
     const { funds, pagination } = searchData;
     
     return {
       success: true,
       data: {
-        searchQuery,
         results: funds.map(fund => this.formatFundSummary(fund)),
         pagination: {
           currentPage: pagination.currentPage,
@@ -53,7 +52,7 @@ class FundResponse {
   }
 
   // Format fund statistics response
-  static formatFundStatsResponse(stats) {
+  static formatStatsResponse(stats) {
     return {
       success: true,
       data: {
@@ -94,42 +93,11 @@ class FundResponse {
     };
   }
 
-  // Format fund with NAV data
-  static formatFundWithNav(fund, navData) {
+  // Format fund NAV response
+  static formatNavResponse(navData) {
     return {
       success: true,
-      data: {
-        fund: this.formatFundDetails(fund),
-        nav: navData ? {
-          current: FormatUtils.formatNav(navData.nav),
-          date: navData.date,
-          updatedAt: navData.updatedAt
-        } : null
-      }
-    };
-  }
-
-  // Format fund NAV response with history
-  static formatFundNavResponse(fundData, history = null) {
-    const { fund, nav, navError } = fundData;
-    
-    return {
-      success: true,
-      data: {
-        schemeCode: fund.schemeCode,
-        schemeName: fund.schemeName,
-        fundHouse: fund.fundHouse,
-        schemeCategory: fund.schemeCategory,
-        currentNav: nav ? FormatUtils.formatNav(nav.nav) : null,
-        asOn: nav ? nav.date : null,
-        navSource: nav ? nav.source : null,
-        navUpdatedAt: nav ? nav.updatedAt : null,
-        navError: navError || null,
-        history: history ? history.map(item => ({
-          date: item.date,
-          nav: FormatUtils.formatNav(item.nav)
-        })) : null
-      }
+      data: navData
     };
   }
 
@@ -182,14 +150,6 @@ class FundResponse {
         field: error.field,
         message: error.message
       }))
-    };
-  }
-
-  // Format not found response
-  static formatNotFoundResponse(resource = 'Fund') {
-    return {
-      success: false,
-      message: `${resource} not found`
     };
   }
 

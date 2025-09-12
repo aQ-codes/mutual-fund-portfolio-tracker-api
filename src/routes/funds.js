@@ -1,5 +1,5 @@
 import express from 'express';
-import FundController from '../controllers/fund-controller.js';
+import FundController from '../controllers/user/fund-controller.js';
 
 const router = express.Router();
 const fundController = new FundController();

@@ -1,7 +1,7 @@
-import { mfApi } from '../config/axiosConfig.js';
-import LatestNav from '../models/LatestNav.js';
-import FundHistory from '../models/FundHistory.js';
-import Fund from '../models/Fund.js';
+import { mfApi } from '../config/axios.js';
+import LatestNav from '../models/latestNav.js';
+import FundHistory from '../models/fundHistory.js';
+import Fund from '../models/fund.js';
 
 class NavService {
   // Fetch latest NAV from external API with retry logic

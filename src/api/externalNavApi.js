@@ -1,4 +1,4 @@
-import { mfApi } from '../config/axiosConfig.js';
+import { mfApi } from '../config/axios.js';
 import config from '../config/env.js';
 
 class ExternalNavApi {
