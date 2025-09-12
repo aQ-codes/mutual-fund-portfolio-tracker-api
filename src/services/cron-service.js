@@ -10,12 +10,12 @@ class CronService {
    * Initialize all cron jobs
    */
   static init() {
-    console.log('🕒 Initializing cron jobs...');
+    console.log(' Initializing cron jobs...');
     
     // Daily NAV update job - runs at 12:00 AM IST (6:30 PM UTC)
     this.scheduleDailyNavUpdate();
     
-    console.log('✅ Cron jobs initialized successfully');
+    console.log(' Cron jobs initialized successfully');
   }
 
   /**
@@ -26,7 +26,7 @@ class CronService {
     const cronExpression = config.cronSchedule || '0 0 * * *'; // Default: 12:00 AM daily
     
     const job = cron.schedule(cronExpression, async () => {
-      console.log('🔄 Starting daily NAV update job at:', new Date().toISOString());
+      console.log(' Starting daily NAV update job at:', new Date().toISOString());
       await this.updateAllPortfolioNavs();
     }, {
       scheduled: true,
@@ -34,7 +34,7 @@ class CronService {
     });
 
     this.jobs.set('dailyNavUpdate', job);
-    console.log(`📅 Daily NAV update job scheduled with cron: ${cronExpression}`);
+    console.log(` Daily NAV update job scheduled with cron: ${cronExpression}`);
   }
 
   /**
@@ -46,17 +46,17 @@ class CronService {
     let totalFailed = 0;
 
     try {
-      console.log('📊 Fetching all unique scheme codes from portfolios...');
+      console.log(' Fetching all unique scheme codes from portfolios...');
       
       // Get all unique scheme codes from user portfolios
       const portfolioSchemes = await Portfolio.distinct('holdings.schemeCode');
       
       if (portfolioSchemes.length === 0) {
-        console.log('ℹ️ No portfolio holdings found. Skipping NAV update.');
+        console.log(' No portfolio holdings found. Skipping NAV update.');
         return;
       }
 
-      console.log(`📈 Found ${portfolioSchemes.length} unique funds in portfolios`);
+      console.log(` Found ${portfolioSchemes.length} unique funds in portfolios`);
 
       // Update NAVs in batches to avoid API rate limits
       const batchSize = 10;
@@ -64,7 +64,7 @@ class CronService {
 
       for (let i = 0; i < portfolioSchemes.length; i += batchSize) {
         const batch = portfolioSchemes.slice(i, i + batchSize);
-        console.log(`🔄 Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(portfolioSchemes.length / batchSize)}`);
+        console.log(` Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(portfolioSchemes.length / batchSize)}`);
 
         const batchPromises = batch.map(async (schemeCode) => {
           try {
@@ -78,14 +78,14 @@ class CronService {
               await NavService.saveNavHistory(schemeCode, navData.nav, navData.date);
               
               totalUpdated++;
-              console.log(`✅ Updated NAV for scheme ${schemeCode}: ₹${navData.nav}`);
+              console.log(` Updated NAV for scheme ${schemeCode}: ₹${navData.nav}`);
             } else {
               totalFailed++;
-              console.log(`❌ Failed to fetch NAV for scheme ${schemeCode}`);
+              console.log(` Failed to fetch NAV for scheme ${schemeCode}`);
             }
           } catch (error) {
             totalFailed++;
-            console.error(`❌ Error updating NAV for scheme ${schemeCode}:`, error.message);
+            console.error(` Error updating NAV for scheme ${schemeCode}:`, error.message);
           }
         });
 
@@ -94,7 +94,7 @@ class CronService {
 
         // Delay between batches (except for the last batch)
         if (i + batchSize < portfolioSchemes.length) {
-          console.log(`⏳ Waiting ${delayBetweenBatches}ms before next batch...`);
+          console.log(` Waiting ${delayBetweenBatches}ms before next batch...`);
           await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
         }
       }
@@ -107,13 +107,13 @@ class CronService {
         duration: `${(duration / 1000).toFixed(2)}s`
       };
 
-      console.log('🎉 Daily NAV update completed:', summary);
+      console.log(' Daily NAV update completed:', summary);
 
       // Send success notification if configured
       await this.sendNotification('NAV Update Completed', summary, 'success');
 
     } catch (error) {
-      console.error('💥 Daily NAV update failed:', error);
+      console.error(' Daily NAV update failed:', error);
       
       const errorSummary = {
         error: error.message,
@@ -131,7 +131,7 @@ class CronService {
    * Manual NAV update for specific scheme codes
    */
   static async updateSpecificNavs(schemeCodes) {
-    console.log(`🔄 Starting manual NAV update for ${schemeCodes.length} schemes...`);
+    console.log(` Starting manual NAV update for ${schemeCodes.length} schemes...`);
     
     const results = await NavService.bulkUpdateNavs(schemeCodes, {
       batchSize: 5,
@@ -139,7 +139,7 @@ class CronService {
       delayBetweenBatches: 2000
     });
 
-    console.log('📊 Manual NAV update results:', {
+    console.log(' Manual NAV update results:', {
       successful: results.successful.length,
       failed: results.failed.length
     });
@@ -155,7 +155,7 @@ class CronService {
     // In production, you would integrate with email service, Slack, etc.
     
     if (config.nodeEnv === 'development') {
-      console.log(`📧 ${type.toUpperCase()} Notification: ${title}`, data);
+      console.log(` ${type.toUpperCase()} Notification: ${title}`, data);
     }
 
     // TODO: Implement actual notification system
@@ -188,10 +188,10 @@ class CronService {
     const job = this.jobs.get(jobName);
     if (job) {
       job.start();
-      console.log(`✅ Started cron job: ${jobName}`);
+      console.log(` Started cron job: ${jobName}`);
       return true;
     }
-    console.log(`❌ Cron job not found: ${jobName}`);
+    console.log(` Cron job not found: ${jobName}`);
     return false;
   }
 
@@ -202,10 +202,10 @@ class CronService {
     const job = this.jobs.get(jobName);
     if (job) {
       job.stop();
-      console.log(`🛑 Stopped cron job: ${jobName}`);
+      console.log(` Stopped cron job: ${jobName}`);
       return true;
     }
-    console.log(`❌ Cron job not found: ${jobName}`);
+    console.log(` Cron job not found: ${jobName}`);
     return false;
   }
 
@@ -213,22 +213,22 @@ class CronService {
    * Destroy all cron jobs (for graceful shutdown)
    */
   static destroyAll() {
-    console.log('🛑 Destroying all cron jobs...');
+    console.log(' Destroying all cron jobs...');
     
     this.jobs.forEach((job, name) => {
       job.destroy();
-      console.log(`🗑️ Destroyed cron job: ${name}`);
+      console.log(` Destroyed cron job: ${name}`);
     });
 
     this.jobs.clear();
-    console.log('✅ All cron jobs destroyed');
+    console.log(' All cron jobs destroyed');
   }
 
   /**
    * Run daily NAV update manually (for testing)
    */
   static async runDailyNavUpdateNow() {
-    console.log('🔄 Running daily NAV update manually...');
+    console.log(' Running daily NAV update manually...');
     await this.updateAllPortfolioNavs();
   }
 }

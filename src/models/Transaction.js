@@ -8,7 +8,7 @@ const TransactionSchema = new mongoose.Schema({
     index: true
   },
   schemeCode: {
-    type: Number,e
+    type: Number,
     required: true,
     index: true
   },

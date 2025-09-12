@@ -63,23 +63,23 @@ const startServer = async () => {
     CronService.init();
     
     const server = app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌍 Environment: ${config.nodeEnv}`);
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${config.nodeEnv}`);
     });
 
     // Graceful shutdown handler
     const gracefulShutdown = (signal) => {
-      console.log(`\n📡 Received ${signal}. Starting graceful shutdown...`);
+      console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
       
       // Stop accepting new connections
       server.close(() => {
-        console.log('🛑 HTTP server closed.');
+        console.log('HTTP server closed.');
         
         // Destroy all cron jobs
         CronService.destroyAll();
         
         // Close database connection
-        console.log('💾 Database connection closed.');
+        console.log('Database connection closed.');
         process.exit(0);
       });
     };
@@ -89,7 +89,7 @@ const startServer = async () => {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     
   } catch (error) {
-    console.error('💥 Failed to start server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
