@@ -213,14 +213,11 @@ class FundController {
       const { schemeCode } = req.params;
       const { days = 30 } = req.query;
       
-      // Validate scheme code
-      const validationResult = FundRequest.validateSchemeCode(schemeCode);
-      if (!validationResult.isValid) {
-        throw new CustomValidationError('Invalid scheme code', validationResult.errors);
-      }
+      // Validate scheme code (convert to number first)
+      const validatedSchemeCode = FundRequest.validateSchemeCode(parseInt(schemeCode));
       
       // Get NAV data
-      const result = await NavService.getFundNavWithHistory(schemeCode, parseInt(days));
+      const result = await NavService.getFundNavWithHistory(validatedSchemeCode, parseInt(days));
       
       if (!result.status) {
         return res.status(500).json(

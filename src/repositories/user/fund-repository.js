@@ -189,19 +189,47 @@ class FundRepository {
     }
   }
   
-  // Search funds (using Fund model's static method)
-  static async searchFunds(searchTerm, options = {}) {
+  // Search funds by query
+  static async searchFunds(searchOptions) {
     try {
-      const funds = await Fund.searchFunds(searchTerm, options);
-      const total = await Fund.countDocuments({
-        $or: [
-          { schemeName: new RegExp(searchTerm, 'i') },
-          { fundHouse: new RegExp(searchTerm, 'i') },
-          { schemeCategory: new RegExp(searchTerm, 'i') }
-        ]
-      });
+      const {
+        query,
+        page = 1,
+        limit = 20,
+        sortBy = 'schemeName',
+        sortOrder = 1
+      } = searchOptions;
       
-      const { page = 1, limit = 20 } = options;
+      if (!query || !query.trim()) {
+        return {
+          status: false,
+          message: 'Search query is required'
+        };
+      }
+      
+      const skip = (page - 1) * limit;
+      const searchRegex = new RegExp(query.trim(), 'i');
+      
+      // Build search query
+      const mongoQuery = {
+        $or: [
+          { schemeName: searchRegex },
+          { fundHouse: searchRegex },
+          { schemeCategory: searchRegex },
+          { schemeType: searchRegex }
+        ]
+      };
+      
+      // Execute search with pagination
+      const [funds, total] = await Promise.all([
+        Fund.find(mongoQuery)
+          .sort({ [sortBy]: sortOrder })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Fund.countDocuments(mongoQuery)
+      ]);
+      
       const totalPages = Math.ceil(total / limit);
       
       return {

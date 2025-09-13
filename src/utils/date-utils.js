@@ -129,6 +129,15 @@ class DateUtils {
     return date.toLocaleDateString('en-IN', options);
   }
 
+  // Format date for API responses (e.g., "2025-09-12")
+  static formatForApi(date) {
+    if (!date || !(date instanceof Date)) {
+      return null;
+    }
+    
+    return date.toISOString().split('T')[0];
+  }
+
   // Calculate days between two dates
   static daysBetween(startDate, endDate) {
     if (!startDate || !endDate || !(startDate instanceof Date) || !(endDate instanceof Date)) {

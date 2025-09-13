@@ -2,6 +2,7 @@ import { mfApi } from '../config/axios.js';
 import FundLatestNav from '../models/fund-latest-nav.js';
 import FundNavHistory from '../models/fund-nav-history.js';
 import Fund from '../models/funds.js';
+import DateUtils from '../utils/date-utils.js';
 
 class NavService {
   // Fetch latest NAV from external API with retry logic
@@ -129,7 +130,7 @@ class NavService {
           success: true,
           data: {
             nav: latestNav.nav,
-            date: latestNav.date,
+            date: DateUtils.formatToApiDate(latestNav.date),
             source: 'database',
             updatedAt: latestNav.updatedAt
           }
@@ -150,7 +151,7 @@ class NavService {
         success: true,
         data: {
           nav: apiResult.data.nav,
-          date: apiResult.data.date,
+          date: DateUtils.formatToApiDate(apiResult.data.date),
           source: 'api',
           meta: apiResult.data.meta
         }
@@ -186,7 +187,7 @@ class NavService {
             data: {
               schemeCode,
               history: history.map(item => ({
-                date: item.date,
+                date: DateUtils.formatToApiDate(item.date),
                 nav: item.nav
               })),
               source: 'database',
@@ -232,7 +233,10 @@ class NavService {
         success: true,
         data: {
           schemeCode,
-          history,
+          history: history.map(item => ({
+            date: DateUtils.formatToApiDate(item.date),
+            nav: item.nav
+          })),
           source: 'api',
           count: history.length,
           meta: apiResult.data.meta
@@ -532,6 +536,67 @@ class NavService {
     } catch (error) {
       console.error(`Error saving NAV history for scheme ${schemeCode}:`, error);
       throw error;
+    }
+  }
+
+  // Get fund NAV with history (for API endpoints)
+  static async getFundNavWithHistory(schemeCode, days = 30) {
+    try {
+      // Get fund details
+      const fund = await Fund.findOne({ schemeCode });
+      if (!fund) {
+        return {
+          status: false,
+          message: 'Fund not found'
+        };
+      }
+
+      // Get latest NAV and history in parallel
+      const [latestNavResult, historyResult] = await Promise.all([
+        this.getLatestNav(schemeCode),
+        this.getNavHistory(schemeCode, { days })
+      ]);
+
+      if (!latestNavResult.success) {
+        return {
+          status: false,
+          message: 'Failed to fetch latest NAV'
+        };
+      }
+
+      if (!historyResult.success) {
+        return {
+          status: false,
+          message: 'Failed to fetch NAV history'
+        };
+      }
+
+      return {
+        status: true,
+        data: {
+          fund: {
+            schemeCode: fund.schemeCode,
+            schemeName: fund.schemeName,
+            fundHouse: fund.fundHouse,
+            schemeCategory: fund.schemeCategory,
+            schemeType: fund.schemeType
+          },
+          latestNav: {
+            nav: latestNavResult.data.nav,
+            date: latestNavResult.data.date,
+            source: latestNavResult.data.source,
+            updatedAt: latestNavResult.data.updatedAt
+          },
+          history: historyResult.data.history,
+          historyCount: historyResult.data.count || historyResult.data.history.length
+        }
+      };
+    } catch (error) {
+      console.error(`Error getting fund NAV with history for scheme ${schemeCode}:`, error);
+      return {
+        status: false,
+        message: error.message
+      };
     }
   }
 }

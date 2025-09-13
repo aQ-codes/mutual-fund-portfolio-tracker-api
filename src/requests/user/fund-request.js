@@ -172,7 +172,52 @@ class FundRequest {
     return value;
   }
 
-  // Validate fund search request
+  // Validate search query (for /api/funds/search?query=...)
+  static validateSearchQuery(data) {
+    const schema = Joi.object({
+      query: Joi.string()
+        .trim()
+        .min(2)
+        .max(100)
+        .required()
+        .messages({
+          'string.base': 'Search query must be a string',
+          'string.min': 'Search query must be at least 2 characters',
+          'string.max': 'Search query cannot exceed 100 characters',
+          'any.required': 'Search query is required'
+        }),
+      
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+      sortBy: Joi.string().valid(
+        'schemeName', 
+        'fundHouse', 
+        'schemeCategory',
+        'relevance'
+      ).default('relevance'),
+      sortOrder: Joi.number().valid(1, -1).default(1)
+    });
+
+    const { error, value } = schema.validate(data, {
+      abortEarly: false,
+      allowUnknown: false,
+      stripUnknown: true
+    });
+
+    if (error) {
+      throw new CustomValidationError(
+        'Search query validation failed',
+        error.details.map(detail => ({
+          field: detail.path.join('.'),
+          message: detail.message
+        }))
+      );
+    }
+
+    return value;
+  }
+
+  // Validate fund search request (alternative format with q parameter)
   static validateFundSearch(data) {
     const schema = Joi.object({
       q: Joi.string()
