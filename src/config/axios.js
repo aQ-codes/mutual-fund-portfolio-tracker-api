@@ -49,19 +49,23 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-// Mutual Fund API specific methods (following full-project structure)
+// Mutual Fund API base URL
+const MF_API_BASE_URL = config.mfApiBaseUrl;
+
+// Mutual Fund API specific methods
 export const mfApi = {
   // Get all funds list
-  getAllFunds: () => axiosInstance.get(config.mfApiBaseUrl || 'https://api.mfapi.in/mf'),
+  getAllFunds: () => axiosInstance.get(MF_API_BASE_URL),
   
   // Get fund details with latest NAV
-  getFundLatest: (schemeCode) => axiosInstance.get(`${config.mfApiBaseUrl || 'https://api.mfapi.in/mf'}/${schemeCode}/latest`),
+  getFundLatest: (schemeCode) => axiosInstance.get(`${MF_API_BASE_URL}/${schemeCode}/latest`),
   
   // Get fund NAV history
-  getFundHistory: (schemeCode) => axiosInstance.get(`${config.mfApiBaseUrl || 'https://api.mfapi.in/mf'}/${schemeCode}`),
+  getFundHistory: (schemeCode) => axiosInstance.get(`${MF_API_BASE_URL}/${schemeCode}`),
   
   // Generic GET request for external APIs
   get: (url, options = {}) => axiosInstance.get(url, options),
+  
   
   // Generic POST request for external APIs
   post: (url, data, options = {}) => axiosInstance.post(url, data, options)

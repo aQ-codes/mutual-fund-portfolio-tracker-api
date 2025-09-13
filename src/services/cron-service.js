@@ -24,7 +24,7 @@ class CronService {
    * Runs every day at 12:00 AM IST (after market hours)
    */
   static scheduleDailyNavUpdate() {
-    const cronExpression = config.cronSchedule || '0 0 * * *'; // Default: 12:00 AM daily
+    const cronExpression = config.cronSchedule; // Already has default in config
     
     const job = cron.schedule(cronExpression, async () => {
       console.log('Starting daily NAV update job at:', new Date().toISOString());

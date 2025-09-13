@@ -98,6 +98,64 @@ class AuthController {
       );
     }
   }
+
+  // Admin login method
+  async adminLogin(req, res) {
+    try {
+      // Validate request data
+      const validatedData = AuthRequest.validateLogin(req.body);
+      
+      // Check if user exists
+      const user = await UserRepository.findByEmail(validatedData.email);
+      
+      if (!user) {
+        return res.status(401).json(
+          AuthResponse.formatErrorResponse('Invalid email or password')
+        );
+      }
+
+      // Check if user has admin role
+      if (user.role !== 'admin') {
+        return res.status(403).json(
+          AuthResponse.formatErrorResponse('Access denied. Admin privileges required.')
+        );
+      }
+      
+      // Verify password
+      const isPasswordValid = await user.comparePassword(validatedData.password);
+      
+      if (!isPasswordValid) {
+        return res.status(401).json(
+          AuthResponse.formatErrorResponse('Invalid email or password')
+        );
+      }
+      
+      // Generate JWT token
+      const token = JwtUtils.generateToken({
+        userId: user._id.toString(),
+        email: user.email,
+        role: user.role
+      });
+      
+      // Return success response with token
+      res.status(200).json(
+        AuthResponse.formatLoginResponse(user, token)
+      );
+      
+    } catch (error) {
+      console.error('Admin login error:', error);
+      
+      if (error instanceof CustomValidationError) {
+        return res.status(400).json(
+          AuthResponse.formatErrorResponse('Invalid request data', error.errors)
+        );
+      }
+      
+      res.status(500).json(
+        AuthResponse.formatErrorResponse('Login failed. Please try again.')
+      );
+    }
+  }
 }
 
 export default AuthController;

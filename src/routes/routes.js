@@ -5,43 +5,26 @@ import portfolioRoutes from './user/portfolio.js';
 import transactionRoutes from './user/transaction.js';
 import adminRoutes from './admin/admin.js';
 import adminFundRoutes from './admin/funds.js';
+import adminAuthRoutes from './admin/auth.js';
 
 const configureRoutes = (app) => {
   // API version prefix
   const API_PREFIX = '/api';
   
-  // Root route
-  app.get('/', (req, res) => {
+  // API information route
+  app.get(['/', API_PREFIX], (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Mutual Fund Portfolio Tracker API',
       version: '1.0.0',
       environment: config.nodeEnv,
-      endpoints: {
-        auth: `${API_PREFIX}/auth`,
-        funds: `${API_PREFIX}/funds`,
-        portfolio: `${API_PREFIX}/portfolio`,
-        transactions: `${API_PREFIX}/transactions`,
-        admin: `${API_PREFIX}/admin`,
-        adminFunds: `${API_PREFIX}/admin/funds`
-      }
-    });
-  });
-  
-  // API information route
-  app.get(API_PREFIX, (req, res) => {
-    res.status(200).json({
-      success: true,
-      message: 'Mutual Fund Portfolio Tracker API',
-      version: '1.0.0',
       status: 'Database connected and server running',
       endpoints: {
         auth: `${API_PREFIX}/auth`,
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
         transactions: `${API_PREFIX}/transactions`,
-        admin: `${API_PREFIX}/admin`,
-        adminFunds: `${API_PREFIX}/admin/funds`
+        admin: `${API_PREFIX}/admin`
       }
     });
   });
@@ -51,6 +34,7 @@ const configureRoutes = (app) => {
   app.use(`${API_PREFIX}/funds`, userFundRoutes);
   app.use(`${API_PREFIX}/portfolio`, portfolioRoutes);
   app.use(`${API_PREFIX}/transactions`, transactionRoutes);
+  app.use(`${API_PREFIX}/admin/auth`, adminAuthRoutes);
   app.use(`${API_PREFIX}/admin`, adminRoutes);
   app.use(`${API_PREFIX}/admin/funds`, adminFundRoutes);
   

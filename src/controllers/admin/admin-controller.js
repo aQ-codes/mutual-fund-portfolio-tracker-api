@@ -8,6 +8,10 @@ import AdminRequest from '../../requests/admin/admin-request.js';
 import AdminResponse from '../../responses/admin/admin-response.js';
 import CronService from '../../services/cron-service.js';
 import CustomValidationError from '../../exceptions/custom-validation-error.js';
+import config from '../../config/env.js';
+
+// Helper for development error messages
+const isDevelopment = config.nodeEnv === 'development';
 
 class AdminController {
   // GET /api/admin/users - List all users
@@ -73,7 +77,7 @@ class AdminController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch users',
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        error: isDevelopment ? error.message : 'Internal server error'
       });
     }
   }
@@ -134,7 +138,7 @@ class AdminController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch portfolios',
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        error: isDevelopment ? error.message : 'Internal server error'
       });
     }
   }
@@ -195,7 +199,7 @@ class AdminController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch popular funds',
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        error: isDevelopment ? error.message : 'Internal server error'
       });
     }
   }
@@ -257,7 +261,7 @@ class AdminController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch system statistics',
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        error: isDevelopment ? error.message : 'Internal server error'
       });
     }
   }
@@ -281,7 +285,7 @@ class AdminController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch cron job status',
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        error: isDevelopment ? error.message : 'Internal server error'
       });
     }
   }
@@ -305,7 +309,7 @@ class AdminController {
       res.status(500).json({
         success: false,
         message: 'Failed to start NAV update',
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        error: isDevelopment ? error.message : 'Internal server error'
       });
     }
   }

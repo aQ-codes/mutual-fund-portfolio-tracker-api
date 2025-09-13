@@ -290,22 +290,11 @@ class FundRepository {
     }
   }
 
-  // Find fund by ID
-  static async findById(fundId) {
-    try {
-      return await Fund.findById(fundId);
-    } catch (error) {
-      console.error('Error finding fund by ID:', error);
-      throw error;
-    }
-  }
-
-  // Find fund by scheme code (direct method)
+  // Find fund by scheme code (used internally)
   static async findBySchemeCode(schemeCode) {
     try {
       return await Fund.findOne({ schemeCode });
     } catch (error) {
-      console.error('Error finding fund by scheme code:', error);
       throw error;
     }
   }
