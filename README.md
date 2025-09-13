@@ -2,28 +2,40 @@
 
 A comprehensive backend system for tracking mutual fund investments in the Indian financial market. Built with Node.js, Express.js, and MongoDB, this API provides real-time NAV data integration, portfolio management, and automated daily updates.
 
-## 🚀 Features
+## 🚀 Key Features Implemented
 
-### Core Functionality
-- **User Authentication**: JWT-based secure authentication system
-- **Portfolio Management**: Add, track, and manage mutual fund investments
-- **Real-time NAV Data**: Integration with external Indian Mutual Fund APIs
-- **Profit/Loss Calculation**: FIFO-based accounting with accurate P&L tracking
-- **Historical Data**: Portfolio performance tracking over time
-- **Automated Updates**: Daily NAV updates via cron jobs
+### 🔐 Authentication & Security
+- **JWT-based Authentication**: Secure token-based auth system
+- **Role-based Access Control**: User and Admin roles with proper permissions
+- **Rate Limiting**: API protection (100 req/min general, 5 login attempts/min, 10 portfolio updates/min)
+- **Password Security**: bcryptjs hashing with 12 rounds
+- **CORS Support**: Cross-domain request handling for frontend integration
 
-### Admin Features
-- **User Management**: View and manage all registered users
+### 📊 Portfolio Management
+- **FIFO Accounting**: First-in-first-out profit/loss calculation like Groww/Kuvera
+- **Real-time NAV Integration**: Live data from Indian Mutual Fund APIs
+- **Portfolio History**: Track portfolio value changes over time with historical NAVs
+- **Transaction Tracking**: Complete audit trail of all buy/sell operations
+- **Multi-fund Support**: Manage multiple mutual fund investments
+
+### 🤖 Automation & Data
+- **Daily NAV Updates**: Automated cron jobs for real-time data
+- **Batch Processing**: Efficient handling of multiple fund updates
+- **Error Recovery**: Graceful handling of API failures and retries
+- **Data Validation**: Comprehensive input validation with Joi schemas
+
+### 👨‍💼 Admin Dashboard
+- **User Management**: View all registered users and their portfolios
 - **System Analytics**: Comprehensive statistics and insights
 - **Popular Funds**: Track most invested mutual fund schemes
-- **Cron Job Management**: Monitor and control automated tasks
+- **Cron Monitoring**: Real-time status of automated tasks
+- **Manual Controls**: Trigger NAV updates and system operations
 
-### Technical Features
-- **Modular Architecture**: Clean separation of concerns
-- **Input Validation**: Comprehensive request validation with Joi
+### 🏗️ Technical Excellence
+- **Modular Architecture**: Clean separation (controllers, services, repositories, models)
 - **Error Handling**: Graceful error handling with proper HTTP status codes
-- **Rate Limiting**: API protection against abuse
-- **Caching Strategy**: Efficient NAV data caching
+- **Input Validation**: Comprehensive request validation
+- **Environment Configuration**: Flexible config for development/production
 - **Graceful Shutdown**: Proper cleanup of resources and cron jobs
 
 ## 🛠️ Tech Stack
@@ -200,22 +212,42 @@ curl -X GET http://localhost:5000/api/portfolio/value \\
 
 ## 🧪 Testing with Postman
 
-We provide a complete Postman collection for easy API testing:
+### Quick Setup
+1. **Import Collection**: 
+   - Open Postman
+   - Import `postman/Mutual_Fund_Portfolio_Tracker_API.postman_collection.json`
+   - Import `postman/Development.postman_environment.json`
 
-### Import Collection
-1. Open Postman
-2. Import files from `/postman/` directory:
-   - `Mutual_Fund_Portfolio_Tracker_API.postman_collection.json`
-   - `Development.postman_environment.json`
+2. **Start Testing**:
+   ```bash
+   # Start the server
+   yarn dev
+   
+   # Server runs on http://localhost:5000
+   ```
 
 ### Testing Workflow
-1. **Setup**: Select "Development" environment
-2. **Auth**: Run "User Signup" or "User Login"
-3. **Funds**: Get fund list and NAV data
-4. **Portfolio**: Add funds and check portfolio value
-5. **Admin**: Test admin endpoints (requires admin role)
+1. **Environment**: Select "Development" environment in Postman
+2. **Authentication**: 
+   - Run "User Signup" to create account
+   - Or "User Login" with existing credentials
+   - Token auto-saves to environment
+3. **Funds**: Test fund search, details, and NAV history
+4. **Portfolio**: Add funds, check value, view history
+5. **Admin**: Test admin endpoints (use admin login first)
 
-See `/postman/README.md` for detailed testing instructions.
+### Available Endpoints
+- **Authentication**: Signup, Login, Admin Login
+- **Funds**: Search, Categories, Fund Houses, NAV History
+- **Portfolio**: Add, Sell, Remove, Value, List, History
+- **Transactions**: Complete transaction history
+- **Admin**: User management, Analytics, System stats
+- **Rate Limiting**: Built-in rate limit testing
+
+### Production Testing
+- Import `postman/Production.postman_environment.json`
+- Update `base_url` with your deployed API URL
+- Test all endpoints with live data
 
 ## 🏗️ Project Structure
 

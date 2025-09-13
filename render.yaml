@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: mutual-fund-portfolio-tracker-api
+    env: node
+    plan: free
+    buildCommand: yarn install
+    startCommand: yarn start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        value: ${MONGODB_URI}
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: ${FRONTEND_URL}
+      - key: MFAPI_BASE_URL
+        value: https://api.mfapi.in/mf
+      - key: ADMIN_NAME
+        value: Admin
+      - key: ADMIN_EMAIL
+        value: ${ADMIN_EMAIL}
+      - key: ADMIN_PASSWORD
+        value: ${ADMIN_PASSWORD}
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 60000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+      - key: LOGIN_RATE_LIMIT_MAX
+        value: 5
+      - key: PORTFOLIO_RATE_LIMIT_MAX
+        value: 10
+      - key: CRON_SCHEDULE
+        value: 0 0 * * *
