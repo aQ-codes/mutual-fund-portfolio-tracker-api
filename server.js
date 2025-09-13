@@ -4,6 +4,7 @@ import connectDB from './src/config/db.js';
 import config from './src/config/env.js';
 import configureRoutes from './src/routes/routes.js';
 import CronService from './src/services/cron-service.js';
+import { apiRateLimiter } from './src/middlewares/rate-limit-middleware.js';
 
 const app = express();
 const PORT = config.port;
@@ -16,6 +17,9 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply general API rate limiting to all routes
+app.use('/api', apiRateLimiter);
 
 // Configure all routes
 configureRoutes(app);
