@@ -223,34 +223,49 @@ class PortfolioRequest {
     return new Date(year, month - 1, day);
   }
 
-  // Validate sell fund request (for future use)
-  static sellFundSchema = Joi.object({
-    schemeCode: Joi.number()
+  // Validation schema for portfolio list query
+  static listQuerySchema = Joi.object({
+    page: Joi.number()
       .integer()
-      .min(100000)
-      .max(999999)
-      .required()
+      .min(1)
+      .default(1)
+      .optional()
       .messages({
-        'number.base': 'Scheme code must be a number',
-        'number.integer': 'Scheme code must be an integer',
-        'number.min': 'Scheme code must be at least 100000',
-        'number.max': 'Scheme code cannot exceed 999999',
-        'any.required': 'Scheme code is required'
+        'number.base': 'Page must be a number',
+        'number.integer': 'Page must be an integer',
+        'number.min': 'Page must be at least 1'
       }),
-    units: Joi.number()
-      .positive()
-      .precision(3)
-      .required()
+    limit: Joi.number()
+      .integer()
+      .min(1)
+      .max(100)
+      .default(20)
+      .optional()
       .messages({
-        'number.base': 'Units must be a number',
-        'number.positive': 'Units must be greater than 0',
-        'any.required': 'Units is required'
+        'number.base': 'Limit must be a number',
+        'number.integer': 'Limit must be an integer',
+        'number.min': 'Limit must be at least 1',
+        'number.max': 'Limit cannot exceed 100'
+      }),
+    sortBy: Joi.string()
+      .valid('investmentAmount', 'currentValue', 'profitLoss', 'schemeName', 'units')
+      .default('investmentAmount')
+      .optional()
+      .messages({
+        'any.only': 'Sort by must be one of: investmentAmount, currentValue, profitLoss, schemeName, units'
+      }),
+    sortOrder: Joi.string()
+      .valid('asc', 'desc')
+      .default('desc')
+      .optional()
+      .messages({
+        'any.only': 'Sort order must be either asc or desc'
       })
   });
 
-  // Validate sell fund request
-  static validateSellFund(data) {
-    const { error, value } = this.sellFundSchema.validate(data, { 
+  // Validate portfolio list query parameters
+  static validateListQuery(query) {
+    const { error, value } = this.listQuerySchema.validate(query, { 
       abortEarly: false,
       stripUnknown: true 
     });
@@ -270,6 +285,7 @@ class PortfolioRequest {
       data: value
     };
   }
+
 }
 
 export default PortfolioRequest;

@@ -1,4 +1,4 @@
-import FundRepository from '../../repositories/user/fund-repository.js';
+import FundRepository from '../../repositories/fund-repository.js';
 import FundRequest from '../../requests/user/fund-request.js';
 import FundResponse from '../../responses/user/fund-response.js';
 import NavService from '../../services/nav-service.js';
@@ -251,4 +251,6 @@ class FundController {
   }
 }
 
-export default FundController;
+// Create and export an instance of the controller
+const fundController = new FundController();
+export default fundController;

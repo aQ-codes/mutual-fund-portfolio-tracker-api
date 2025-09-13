@@ -1,12 +1,11 @@
 import express from 'express';
 import AdminController from '../../controllers/admin/admin-controller.js';
-import { authenticate, requireAdmin } from '../../middlewares/auth-middleware.js';
+import { authenticateAdmin } from '../../middlewares/auth-middleware.js';
 
 const router = express.Router();
 
-// Apply authentication and admin authorization to all admin routes
-router.use(authenticate);
-router.use(requireAdmin);
+// Apply admin authentication to all admin routes
+router.use(authenticateAdmin);
 
 // GET /api/admin/users - List all users
 router.get('/users', AdminController.getUsers);

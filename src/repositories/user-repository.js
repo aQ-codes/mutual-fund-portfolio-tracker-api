@@ -67,6 +67,67 @@ class UserRepository {
       throw error;
     }
   }
+
+  // Find users with query and pagination
+  static async findWithQuery(query, options = {}) {
+    try {
+      const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = -1 } = options;
+      const skip = (page - 1) * limit;
+
+      return await User.find(query)
+        .select('-passwordHash')
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(limit);
+    } catch (error) {
+      console.error('Error finding users with query:', error);
+      throw error;
+    }
+  }
+
+  // Count users by query
+  static async countByQuery(query = {}) {
+    try {
+      return await User.countDocuments(query);
+    } catch (error) {
+      console.error('Error counting users by query:', error);
+      throw error;
+    }
+  }
+
+  // Get all users with pagination
+  static async getAllWithPagination(options = {}) {
+    try {
+      const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = -1 } = options;
+      const skip = (page - 1) * limit;
+
+      const [users, total] = await Promise.all([
+        User.find()
+          .select('-passwordHash')
+          .sort({ [sortBy]: sortOrder })
+          .skip(skip)
+          .limit(limit),
+        User.countDocuments()
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        users,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalUsers: total,
+          limit,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      };
+    } catch (error) {
+      console.error('Error getting users with pagination:', error);
+      throw error;
+    }
+  }
 }
 
 export default UserRepository;

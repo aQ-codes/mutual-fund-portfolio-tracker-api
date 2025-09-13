@@ -3,6 +3,7 @@ import Transaction from '../models/transaction.js';
 import Holding from '../models/holding.js';
 import Fund from '../models/funds.js';
 import NavService from './nav-service.js';
+import DateUtils from '../utils/date-utils.js';
 
 /**
  * Portfolio Service
@@ -48,8 +49,15 @@ class PortfolioService {
    * @returns {Object} Transaction and updated holding
    */
   static async addUnits(userId, schemeCode, units, nav, date = new Date()) {
+    // Check if portfolio already exists
+    const existingPortfolio = await Portfolio.findOne({ userId, schemeCode });
+    const isNewPortfolio = !existingPortfolio;
+    
     // Get or create portfolio
     const portfolio = await this.getOrCreatePortfolio(userId, schemeCode);
+    
+    // Check if holding already exists
+    const existingHolding = await Holding.findOne({ portfolioId: portfolio._id, schemeCode });
     
     // Create transaction
     const transaction = new Transaction({
@@ -65,7 +73,12 @@ class PortfolioService {
     // Update or create holding
     await this.updateHoldingAfterBuy(portfolio._id, schemeCode, units, nav);
 
-    return { transaction, portfolioId: portfolio._id };
+    return { 
+      transaction, 
+      portfolioId: portfolio._id,
+      isNewPortfolio,
+      isNewHolding: !existingHolding
+    };
   }
 
   /**
@@ -287,12 +300,16 @@ class PortfolioService {
         const navData = await NavService.getLatestNav(portfolio.schemeCode);
         const currentNav = navData.success ? navData.data.nav : holding.avgNav;
         
+        // Get fund details for scheme name
+        const fund = await Fund.findOne({ schemeCode: portfolio.schemeCode });
+        
         totalInvestment += holding.investedValue;
         currentValue += holding.totalUnits * currentNav;
         
         holdings.push({
           schemeCode: portfolio.schemeCode,
-          totalUnits: holding.totalUnits,
+          schemeName: fund ? fund.schemeName : 'Unknown Fund',
+          units: holding.totalUnits,
           avgNav: holding.avgNav,
           currentNav,
           investedValue: holding.investedValue,
@@ -308,10 +325,68 @@ class PortfolioService {
     return {
       totalInvestment,
       currentValue,
-      totalProfitLoss,
+      profitLoss: totalProfitLoss,
       profitLossPercent,
+      asOn: DateUtils.formatToApiDate(new Date()),
       holdings
     };
+  }
+
+  /**
+   * Remove a fund from portfolio (only if no holdings exist)
+   * @param {ObjectId} userId - User ID
+   * @param {Number} schemeCode - Scheme code
+   * @returns {Object} Result of removal
+   */
+  static async removeFund(userId, schemeCode) {
+    try {
+      // Find portfolio
+      const portfolio = await Portfolio.findOne({ userId, schemeCode });
+      if (!portfolio) {
+        return {
+          status: false,
+          message: 'Portfolio not found for this fund'
+        };
+      }
+
+      // Check if there are any holdings
+      const holding = await Holding.findOne({ portfolioId: portfolio._id, schemeCode });
+      if (holding && holding.totalUnits > 0) {
+        return {
+          status: false,
+          message: 'Cannot remove fund with existing holdings. Please sell all units first.'
+        };
+      }
+
+      // Check if there are any transactions
+      const transactionCount = await Transaction.countDocuments({ portfolioId: portfolio._id });
+      if (transactionCount > 0) {
+        return {
+          status: false,
+          message: 'Cannot remove fund with transaction history. Fund can only be removed if no transactions exist.'
+        };
+      }
+
+      // Remove holding if it exists (with 0 units)
+      if (holding) {
+        await Holding.deleteOne({ portfolioId: portfolio._id, schemeCode });
+      }
+
+      // Remove portfolio
+      await Portfolio.deleteOne({ _id: portfolio._id });
+
+      return {
+        status: true,
+        message: 'Fund removed from portfolio successfully'
+      };
+
+    } catch (error) {
+      console.error('Error removing fund from portfolio:', error);
+      return {
+        status: false,
+        message: error.message
+      };
+    }
   }
 
   /**
@@ -348,59 +423,6 @@ class PortfolioService {
     return transactions;
   }
 
-  /**
-   * Rebuild holdings from transactions (data consistency helper)
-   * @param {ObjectId} userId - User ID
-   * @param {Number} schemeCode - Optional scheme code
-   */
-  static async rebuildHoldings(userId, schemeCode = null) {
-    let portfolios;
-    
-    if (schemeCode) {
-      portfolios = await Portfolio.find({ userId, schemeCode });
-    } else {
-      portfolios = await Portfolio.find({ userId });
-    }
-
-    for (const portfolio of portfolios) {
-      // Delete existing holding
-      await Holding.deleteOne({ portfolioId: portfolio._id, schemeCode: portfolio.schemeCode });
-
-      // Get all transactions for this portfolio
-      const transactions = await Transaction.find({ portfolioId: portfolio._id }).sort({ date: 1 });
-
-      let totalUnits = 0;
-      let totalInvestedValue = 0;
-
-      for (const transaction of transactions) {
-        if (transaction.type === 'BUY') {
-          totalUnits += transaction.units;
-          totalInvestedValue += transaction.amount;
-        } else if (transaction.type === 'SELL') {
-          totalUnits -= transaction.units;
-          // For sells, we need to calculate the cost basis of sold units
-          // This is simplified - in practice, you'd use FIFO to determine exact cost
-          const avgNav = totalInvestedValue / (totalUnits + transaction.units);
-          totalInvestedValue -= transaction.units * avgNav;
-        }
-      }
-
-      // Create new holding if there are units
-      if (totalUnits > 0) {
-        const avgNav = totalInvestedValue / totalUnits;
-        
-        const holding = new Holding({
-          portfolioId: portfolio._id,
-          schemeCode: portfolio.schemeCode,
-          totalUnits,
-          avgNav,
-          investedValue: totalInvestedValue
-        });
-        
-        await holding.save();
-      }
-    }
-  }
 }
 
 export default PortfolioService;

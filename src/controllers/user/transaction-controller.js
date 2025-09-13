@@ -1,4 +1,4 @@
-import PortfolioService from '../../services/portfolio-service.js';
+import TransactionRepository from '../../repositories/transaction-repository.js';
 import TransactionRequest from '../../requests/user/transaction-request.js';
 import TransactionResponse from '../../responses/user/transaction-response.js';
 import CustomValidationError from '../../exceptions/custom-validation-error.js';
@@ -23,7 +23,7 @@ class TransactionController {
       }
 
       // Get transaction history
-      const transactions = await PortfolioService.getTransactionHistory(
+      const transactions = await TransactionRepository.getUserTransactionHistory(
         userId, 
         validatedQuery.data.schemeCode,
         {
@@ -57,39 +57,6 @@ class TransactionController {
     }
   }
 
-  // POST /api/transactions/rebuild-holdings - Rebuild holdings from transactions
-  static async rebuildHoldings(req, res) {
-    try {
-      const userId = req.user.id;
-      const { schemeCode } = req.body;
-
-      // Validate request
-      if (schemeCode && typeof schemeCode !== 'number') {
-        throw new CustomValidationError('Invalid scheme code', ['Scheme code must be a number']);
-      }
-
-      // Rebuild holdings
-      await PortfolioService.rebuildHoldings(userId, schemeCode);
-
-      res.status(200).json({
-        success: true,
-        message: 'Holdings rebuilt successfully from transaction history'
-      });
-
-    } catch (error) {
-      console.error('Rebuild holdings error:', error);
-      
-      if (error instanceof CustomValidationError) {
-        return res.status(400).json(
-          TransactionResponse.formatValidationErrorResponse('Invalid request data', error.errors)
-        );
-      }
-      
-      res.status(500).json(
-        TransactionResponse.formatErrorResponse('Failed to rebuild holdings. Please try again.')
-      );
-    }
-  }
 }
 
 export default TransactionController;

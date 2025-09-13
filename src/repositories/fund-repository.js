@@ -1,5 +1,5 @@
-import Fund from '../../models/funds.js';
-import { CustomValidationError } from '../../exceptions/custom-validation-error.js';
+import Fund from '../models/funds.js';
+import { CustomValidationError } from '../exceptions/custom-validation-error.js';
 
 class FundRepository {
   // Create or update fund
@@ -253,6 +253,60 @@ class FundRepository {
         status: false,
         message: error.message
       };
+    }
+  }
+
+  // Get categories
+  static async getCategories() {
+    try {
+      const categories = await Fund.distinct('schemeCategory');
+      return {
+        status: true,
+        data: categories.sort()
+      };
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return {
+        status: false,
+        message: error.message
+      };
+    }
+  }
+
+  // Get fund houses
+  static async getFundHouses() {
+    try {
+      const fundHouses = await Fund.distinct('fundHouse');
+      return {
+        status: true,
+        data: fundHouses.sort()
+      };
+    } catch (error) {
+      console.error('Error fetching fund houses:', error);
+      return {
+        status: false,
+        message: error.message
+      };
+    }
+  }
+
+  // Find fund by ID
+  static async findById(fundId) {
+    try {
+      return await Fund.findById(fundId);
+    } catch (error) {
+      console.error('Error finding fund by ID:', error);
+      throw error;
+    }
+  }
+
+  // Find fund by scheme code (direct method)
+  static async findBySchemeCode(schemeCode) {
+    try {
+      return await Fund.findOne({ schemeCode });
+    } catch (error) {
+      console.error('Error finding fund by scheme code:', error);
+      throw error;
     }
   }
 }

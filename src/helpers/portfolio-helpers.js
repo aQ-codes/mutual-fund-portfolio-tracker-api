@@ -123,6 +123,94 @@ class PortfolioHelpers {
     
     return parseFloat((units * nav).toFixed(2)); // 2 decimal places for amount
   }
+
+  // Get portfolio value history over time (cumulative of all funds)
+  static async getPortfolioValueHistory(userId, options = {}) {
+    try {
+      const { days = 30, startDate, endDate } = options;
+      
+      // Import required modules
+      const Portfolio = (await import('../models/portfolio.js')).default;
+      const Holding = (await import('../models/holding.js')).default;
+      const NavService = (await import('../services/nav-service.js')).default;
+      const DateUtils = (await import('../utils/date-utils.js')).default;
+      
+      // Get user's portfolios
+      const portfolios = await Portfolio.find({ userId });
+      
+      if (!portfolios || portfolios.length === 0) {
+        return {
+          status: true,
+          data: []
+        };
+      }
+      
+      // Generate date range
+      let dateRange = [];
+      if (startDate && endDate) {
+        const start = DateUtils.parseApiDate(startDate);
+        const end = DateUtils.parseApiDate(endDate);
+        const current = new Date(start);
+        
+        while (current <= end) {
+          dateRange.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+      } else {
+        // Generate last N days
+        for (let i = days - 1; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          dateRange.push(date);
+        }
+      }
+      
+      const history = [];
+      
+      // For each date, calculate total portfolio value
+      for (const date of dateRange) {
+        let totalInvestment = 0;
+        let currentValue = 0;
+        
+        for (const portfolio of portfolios) {
+          const holding = await Holding.findOne({ 
+            portfolioId: portfolio._id, 
+            schemeCode: portfolio.schemeCode 
+          });
+          
+          if (holding && holding.totalUnits > 0) {
+            // For historical dates, we'd need historical NAV
+            // For now, using current NAV as approximation
+            const navData = await NavService.getLatestNav(portfolio.schemeCode);
+            const nav = navData.success ? navData.data.nav : holding.avgNav;
+            
+            totalInvestment += holding.investedValue;
+            currentValue += holding.totalUnits * nav;
+          }
+        }
+        
+        const profitLoss = currentValue - totalInvestment;
+        
+        history.push({
+          date: DateUtils.formatToApiDate(date),
+          totalValue: parseFloat(currentValue.toFixed(2)),
+          profitLoss: parseFloat(profitLoss.toFixed(2))
+        });
+      }
+      
+      return {
+        status: true,
+        data: history
+      };
+      
+    } catch (error) {
+      console.error('Error getting portfolio value history:', error);
+      return {
+        status: false,
+        message: error.message
+      };
+    }
+  }
 }
 
 export default PortfolioHelpers;

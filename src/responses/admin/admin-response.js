@@ -12,8 +12,8 @@ class AdminResponse {
           name: user.name,
           email: user.email,
           role: user.role,
-          createdAt: DateUtils.formatToISO(user.createdAt),
-          updatedAt: DateUtils.formatToISO(user.updatedAt)
+          createdAt: DateUtils.formatToApiDate(user.createdAt),
+          updatedAt: DateUtils.formatToApiDate(user.updatedAt)
         })),
         pagination: {
           currentPage: pagination.currentPage,
@@ -45,8 +45,8 @@ class AdminResponse {
             totalUnits: parseFloat(holding.totalUnits.toFixed(3)),
             lotsCount: holding.lots.length
           })),
-          createdAt: DateUtils.formatToISO(portfolio.createdAt),
-          updatedAt: DateUtils.formatToISO(portfolio.updatedAt)
+          createdAt: DateUtils.formatToApiDate(portfolio.createdAt),
+          updatedAt: DateUtils.formatToApiDate(portfolio.updatedAt)
         })),
         pagination: {
           currentPage: pagination.currentPage,
@@ -109,7 +109,7 @@ class AdminResponse {
           schemeCode: transaction.schemeCode,
           units: parseFloat(transaction.units.toFixed(3)),
           amount: parseFloat(transaction.amount.toFixed(2)),
-          date: DateUtils.formatToISO(transaction.date)
+          date: DateUtils.formatToApiDate(transaction.date)
         })),
         generatedAt: new Date().toISOString()
       }

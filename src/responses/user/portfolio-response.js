@@ -4,17 +4,30 @@ import DateUtils from '../../utils/date-utils.js';
 class PortfolioResponse {
   // Format response for adding fund to portfolio
   static formatAddFundResponse(data) {
-    const { portfolioId, schemeCode, schemeName, units, addedAt } = data;
+    const { portfolioId, schemeCode, schemeName, units, addedAt, isNewPortfolio, transactionId, nav, amount } = data;
+    
+    const message = isNewPortfolio 
+      ? 'Fund added to portfolio successfully' 
+      : 'Additional units added to existing portfolio';
     
     return {
       success: true,
-      message: 'Fund added to portfolio successfully',
-      portfolio: {
-        id: portfolioId,
-        schemeCode,
-        schemeName,
-        units: parseFloat(units.toFixed(1)),
-        addedAt: DateUtils.formatToISO(addedAt)
+      message,
+      data: {
+        portfolio: {
+          id: portfolioId,
+          schemeCode,
+          schemeName,
+          isNewPortfolio
+        },
+        transaction: {
+          id: transactionId,
+          type: 'BUY',
+          units: parseFloat(units.toFixed(3)),
+          nav: parseFloat(nav.toFixed(4)),
+          amount: parseFloat(amount.toFixed(2)),
+          date: DateUtils.formatToApiDate(addedAt)
+        }
       }
     };
   }
@@ -34,7 +47,7 @@ class PortfolioResponse {
         nav: parseFloat(nav.toFixed(4)),
         saleAmount: parseFloat(saleAmount.toFixed(2)),
         realizedPL: parseFloat(realizedPL.toFixed(2)),
-        soldAt: DateUtils.formatToISO(date)
+        soldAt: DateUtils.formatToApiDate(date)
       }
     };
   }
@@ -76,8 +89,12 @@ class PortfolioResponse {
           schemeCode: holding.schemeCode,
           schemeName: holding.schemeName,
           units: parseFloat(holding.units.toFixed(3)),
+          avgNav: parseFloat(holding.avgNav.toFixed(4)),
           currentNav: parseFloat(holding.currentNav.toFixed(4)),
-          currentValue: parseFloat(holding.currentValue.toFixed(2))
+          investedValue: parseFloat(holding.investedValue.toFixed(2)),
+          currentValue: parseFloat(holding.currentValue.toFixed(2)),
+          profitLoss: parseFloat(holding.profitLoss.toFixed(2)),
+          recentTransactions: holding.recentTransactions || []
         }))
       }
     };
@@ -117,7 +134,7 @@ class PortfolioResponse {
           currentValue: 0,
           profitLoss: 0,
           profitLossPercent: 0,
-          asOn: DateUtils.formatToIndianDate(new Date())
+          asOn: DateUtils.formatToApiDate(new Date())
         },
         holdings: []
       }

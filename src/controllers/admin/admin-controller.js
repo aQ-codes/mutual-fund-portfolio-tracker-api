@@ -1,7 +1,8 @@
-import User from '../../models/user.js';
-import Portfolio from '../../models/portfolio.js';
-import Transaction from '../../models/transaction.js';
-import Fund from '../../models/funds.js';
+import UserRepository from '../../repositories/user-repository.js';
+import PortfolioRepository from '../../repositories/portfolio-repository.js';
+import TransactionRepository from '../../repositories/transaction-repository.js';
+import FundRepository from '../../repositories/fund-repository.js';
+import HoldingRepository from '../../repositories/holding-repository.js';
 import FundLatestNav from '../../models/fund-latest-nav.js';
 import AdminRequest from '../../requests/admin/admin-request.js';
 import AdminResponse from '../../responses/admin/admin-response.js';
@@ -35,12 +36,13 @@ class AdminController {
       // Get users with pagination
       const skip = (page - 1) * limit;
       const [users, totalUsers] = await Promise.all([
-        User.find(query)
-          .select('-passwordHash')
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(limit),
-        User.countDocuments(query)
+        UserRepository.findWithQuery(query, {
+          page,
+          limit,
+          sortBy: 'createdAt',
+          sortOrder: -1
+        }),
+        UserRepository.countByQuery(query)
       ]);
 
       // Format response
@@ -218,7 +220,7 @@ class AdminController {
         User.countDocuments({ 
           updatedAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // Last 30 days
         }),
-        this.calculateTotalInvestmentValue(),
+        AdminController.calculateTotalInvestmentValue(),
         Transaction.find()
           .sort({ createdAt: -1 })
           .limit(10)
@@ -226,10 +228,10 @@ class AdminController {
       ]);
 
       // Get user growth (last 12 months)
-      const userGrowth = await this.getUserGrowthStats();
+      const userGrowth = await AdminController.getUserGrowthStats();
 
       // Get portfolio distribution by value ranges
-      const portfolioDistribution = await this.getPortfolioDistribution();
+      const portfolioDistribution = await AdminController.getPortfolioDistribution();
 
       // Format response
       const responseData = AdminResponse.formatSystemStatsResponse({

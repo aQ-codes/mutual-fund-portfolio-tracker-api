@@ -1,9 +1,10 @@
 import config from '../config/env.js';
 import authRoutes from './user/auth.js';
-import fundRoutes from './funds.js';
+import userFundRoutes from './user/funds.js';
 import portfolioRoutes from './user/portfolio.js';
 import transactionRoutes from './user/transaction.js';
 import adminRoutes from './admin/admin.js';
+import adminFundRoutes from './admin/funds.js';
 
 const configureRoutes = (app) => {
   // API version prefix
@@ -21,7 +22,8 @@ const configureRoutes = (app) => {
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
         transactions: `${API_PREFIX}/transactions`,
-        admin: `${API_PREFIX}/admin`
+        admin: `${API_PREFIX}/admin`,
+        adminFunds: `${API_PREFIX}/admin/funds`
       }
     });
   });
@@ -38,17 +40,19 @@ const configureRoutes = (app) => {
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
         transactions: `${API_PREFIX}/transactions`,
-        admin: `${API_PREFIX}/admin`
+        admin: `${API_PREFIX}/admin`,
+        adminFunds: `${API_PREFIX}/admin/funds`
       }
     });
   });
   
   // Configure route groups
   app.use(`${API_PREFIX}/auth`, authRoutes);
-  app.use(`${API_PREFIX}/funds`, fundRoutes);
+  app.use(`${API_PREFIX}/funds`, userFundRoutes);
   app.use(`${API_PREFIX}/portfolio`, portfolioRoutes);
   app.use(`${API_PREFIX}/transactions`, transactionRoutes);
   app.use(`${API_PREFIX}/admin`, adminRoutes);
+  app.use(`${API_PREFIX}/admin/funds`, adminFundRoutes);
   
   // API route not found handler
   app.use(`${API_PREFIX}/*`, (req, res) => {

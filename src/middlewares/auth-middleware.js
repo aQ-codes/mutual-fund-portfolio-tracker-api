@@ -104,10 +104,20 @@ export const requireRole = (allowedRoles) => {
   };
 };
 
-// Convenience middleware for user-only access
+/**
+ * User authentication middleware - allows both user and admin roles
+ */
+export const authenticateUser = [authenticate, requireRole(['user', 'admin'])];
+
+/**
+ * Admin authentication middleware - only allows admin role
+ */
+export const authenticateAdmin = [authenticate, requireRole('admin')];
+
+// Convenience middleware for user-only access (backward compatibility)
 export const requireUser = requireRole(['user', 'admin']);
 
-// Convenience middleware for admin-only access
+// Convenience middleware for admin-only access (backward compatibility)
 export const requireAdmin = requireRole('admin');
 
 export default authenticate;
