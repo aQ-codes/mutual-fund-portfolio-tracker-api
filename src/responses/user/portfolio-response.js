@@ -4,18 +4,37 @@ import DateUtils from '../../utils/date-utils.js';
 class PortfolioResponse {
   // Format response for adding fund to portfolio
   static formatAddFundResponse(data) {
-    const { schemeCode, schemeName, units, nav, investmentAmount, date } = data;
+    const { portfolioId, schemeCode, schemeName, units, addedAt } = data;
     
     return {
       success: true,
       message: 'Fund added to portfolio successfully',
+      portfolio: {
+        id: portfolioId,
+        schemeCode,
+        schemeName,
+        units: parseFloat(units.toFixed(1)),
+        addedAt: DateUtils.formatToISO(addedAt)
+      }
+    };
+  }
+
+  // Format response for selling fund from portfolio
+  static formatSellFundResponse(data) {
+    const { schemeCode, schemeName, units, nav, saleAmount, realizedPL, date, transactionId } = data;
+    
+    return {
+      success: true,
+      message: 'Fund sold from portfolio successfully',
       data: {
+        transactionId,
         schemeCode,
         schemeName,
         units: parseFloat(units.toFixed(3)),
         nav: parseFloat(nav.toFixed(4)),
-        investmentAmount: parseFloat(investmentAmount.toFixed(2)),
-        addedAt: DateUtils.formatToISO(date)
+        saleAmount: parseFloat(saleAmount.toFixed(2)),
+        realizedPL: parseFloat(realizedPL.toFixed(2)),
+        soldAt: DateUtils.formatToISO(date)
       }
     };
   }
@@ -27,21 +46,18 @@ class PortfolioResponse {
     return {
       success: true,
       data: {
-        summary: {
-          totalInvestment: parseFloat(totalInvestment.toFixed(2)),
-          currentValue: parseFloat(currentValue.toFixed(2)),
-          profitLoss: parseFloat(profitLoss.toFixed(2)),
-          profitLossPercent: parseFloat(profitLossPercent.toFixed(2)),
-          asOn
-        },
+        totalInvestment: parseFloat(totalInvestment.toFixed(0)),
+        currentValue: parseFloat(currentValue.toFixed(0)),
+        profitLoss: parseFloat(profitLoss.toFixed(0)),
+        profitLossPercent: parseFloat(profitLossPercent.toFixed(3)),
+        asOn,
         holdings: holdings.map(holding => ({
           schemeCode: holding.schemeCode,
           schemeName: holding.schemeName,
-          units: parseFloat(holding.units.toFixed(3)),
+          units: parseFloat(holding.units.toFixed(1)),
           currentNav: parseFloat(holding.currentNav.toFixed(4)),
           currentValue: parseFloat(holding.currentValue.toFixed(2)),
           investedValue: parseFloat(holding.investedValue.toFixed(2)),
-          avgCost: parseFloat(holding.avgCost.toFixed(4)),
           profitLoss: parseFloat(holding.profitLoss.toFixed(2))
         }))
       }

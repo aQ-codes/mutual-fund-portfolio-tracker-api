@@ -1,7 +1,7 @@
 import UserRepository from '../../repositories/user-repository.js';
 import AuthRequest from '../../requests/user/auth-request.js';
 import AuthResponse from '../../responses/user/auth-response.js';
-import JwtService from '../../services/jwt-service.js';
+import JwtUtils from '../../utils/jwt-utils.js';
 import { CustomValidationError } from '../../exceptions/custom-validation-error.js';
 
 class AuthController {
@@ -28,7 +28,7 @@ class AuthController {
       }
       
       // Generate JWT token
-      const token = JwtService.generateToken(
+      const token = JwtUtils.generateToken(
         user._id.toString(),
         user.email,
         user.role
@@ -73,7 +73,7 @@ class AuthController {
       const user = userResult.data;
       
       // Generate JWT token (auto-login after signup)
-      const token = JwtService.generateToken(
+      const token = JwtUtils.generateToken(
         user._id.toString(),
         user.email,
         user.role

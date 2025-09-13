@@ -2,6 +2,7 @@ import config from '../config/env.js';
 import authRoutes from './user/auth.js';
 import fundRoutes from './funds.js';
 import portfolioRoutes from './user/portfolio.js';
+import transactionRoutes from './user/transaction.js';
 import adminRoutes from './admin/admin.js';
 
 const configureRoutes = (app) => {
@@ -19,6 +20,7 @@ const configureRoutes = (app) => {
         auth: `${API_PREFIX}/auth`,
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
+        transactions: `${API_PREFIX}/transactions`,
         admin: `${API_PREFIX}/admin`
       }
     });
@@ -35,6 +37,7 @@ const configureRoutes = (app) => {
         auth: `${API_PREFIX}/auth`,
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
+        transactions: `${API_PREFIX}/transactions`,
         admin: `${API_PREFIX}/admin`
       }
     });
@@ -44,6 +47,7 @@ const configureRoutes = (app) => {
   app.use(`${API_PREFIX}/auth`, authRoutes);
   app.use(`${API_PREFIX}/funds`, fundRoutes);
   app.use(`${API_PREFIX}/portfolio`, portfolioRoutes);
+  app.use(`${API_PREFIX}/transactions`, transactionRoutes);
   app.use(`${API_PREFIX}/admin`, adminRoutes);
   
   // API route not found handler
@@ -55,6 +59,7 @@ const configureRoutes = (app) => {
         auth: `${API_PREFIX}/auth`,
         funds: `${API_PREFIX}/funds`,
         portfolio: `${API_PREFIX}/portfolio`,
+        transactions: `${API_PREFIX}/transactions`,
         admin: `${API_PREFIX}/admin`
       }
     });

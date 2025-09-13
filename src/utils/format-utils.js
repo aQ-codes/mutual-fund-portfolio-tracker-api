@@ -1,46 +1,6 @@
-// Generic formatting utilities
+// Generic formatting utilities - pure functions, no external dependencies
 
 class FormatUtils {
-  // Format currency values
-  static formatCurrency(amount, currency = '₹') {
-    if (typeof amount !== 'number') return `${currency}0.00`;
-    
-    return `${currency}${amount.toLocaleString('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })}`;
-  }
-
-  // Format percentage values
-  static formatPercentage(value, decimalPlaces = 2) {
-    if (typeof value !== 'number') return '0.00%';
-    
-    return `${value.toFixed(decimalPlaces)}%`;
-  }
-
-  // Format numbers with Indian locale
-  static formatNumber(number, decimalPlaces = 2) {
-    if (typeof number !== 'number') return '0.00';
-    
-    return number.toLocaleString('en-IN', {
-      minimumFractionDigits: decimalPlaces,
-      maximumFractionDigits: decimalPlaces
-    });
-  }
-
-  // Format units (3 decimal places)
-  static formatUnits(units) {
-    if (typeof units !== 'number') return '0.000';
-    
-    return units.toFixed(3);
-  }
-
-  // Format NAV (4 decimal places)
-  static formatNav(nav) {
-    if (typeof nav !== 'number') return '0.0000';
-    
-    return nav.toFixed(4);
-  }
 
   // Truncate string with ellipsis
   static truncateString(str, maxLength = 50) {

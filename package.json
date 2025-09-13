@@ -6,10 +6,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed:funds": "node src/seeders/enhanced-fund-seeder.js",
-    "seed:funds:clear": "node src/seeders/enhanced-fund-seeder.js --clear",
-    "seed:funds:full": "node src/seeders/enhanced-fund-seeder.js --clear --with-history",
-    "seed:old": "node src/seeders/fund-seeder.js"
+    "seed:all": "node scripts/run-all-seeders.js",
+    "seed:funds": "node src/seeders/fund-seeder.js",
+    "seed:admin": "node src/seeders/admin-seeder.js"
   },
   "dependencies": {
     "axios": "^1.6.0",

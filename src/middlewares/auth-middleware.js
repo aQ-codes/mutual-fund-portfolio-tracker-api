@@ -1,4 +1,4 @@
-import JwtService from '../services/jwt-service.js';
+import JwtUtils from '../utils/jwt-utils.js';
 import UserRepository from '../repositories/user-repository.js';
 
 // Main authentication middleware
@@ -29,7 +29,7 @@ export const authenticate = async (req, res, next) => {
     // Verify token
     let decoded;
     try {
-      decoded = JwtService.verifyToken(token);
+      decoded = JwtUtils.verifyToken(token);
     } catch (jwtError) {
       if (jwtError.message.includes('expired')) {
         return res.status(401).json({
@@ -59,7 +59,7 @@ export const authenticate = async (req, res, next) => {
     
     // Add user to request object
     req.user = {
-      userId: user._id.toString(),
+      id: user._id.toString(), // Changed from userId to id for consistency
       email: user.email,
       name: user.name,
       role: user.role

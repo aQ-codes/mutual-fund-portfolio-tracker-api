@@ -1,7 +1,6 @@
-import Portfolio from '../../models/portfolio.js';
-import Fund from '../../models/fund.js';
+import Fund from '../../models/funds.js';
 import NavService from '../../services/nav-service.js';
-import PortfolioHelpers from '../../helpers/portfolio-helpers.js';
+import PortfolioService from '../../services/portfolio-service.js';
 import PortfolioRequest from '../../requests/user/portfolio-request.js';
 import PortfolioResponse from '../../responses/user/portfolio-response.js';
 import CustomValidationError from '../../exceptions/custom-validation-error.js';
@@ -30,27 +29,23 @@ class PortfolioController {
 
       // Get latest NAV for the fund
       const navData = await NavService.getLatestNav(schemeCode);
-      if (!navData || !navData.nav) {
+      if (!navData || !navData.success || !navData.data || !navData.data.nav) {
         return res.status(400).json({
           success: false,
           message: 'Unable to fetch current NAV for this fund. Please try again later.'
         });
       }
 
-      // Get or create user's portfolio
-      const portfolio = await Portfolio.getOrCreatePortfolio(userId);
-
-      // Add units to portfolio
-      await portfolio.addUnits(schemeCode, units, navData.nav, new Date());
+      // Add units to portfolio using service
+      const result = await PortfolioService.addUnits(userId, schemeCode, units, navData.data.nav, new Date());
 
       // Format response
       const responseData = PortfolioResponse.formatAddFundResponse({
+        portfolioId: result.portfolio._id,
         schemeCode,
         schemeName: fund.schemeName,
         units,
-        nav: navData.nav,
-        investmentAmount: units * navData.nav,
-        date: new Date()
+        addedAt: new Date()
       });
 
       res.status(201).json(responseData);
@@ -75,26 +70,17 @@ class PortfolioController {
     try {
       const userId = req.user.id;
 
-      // Get user's portfolio
-      const portfolio = await Portfolio.findOne({ userId }).populate('holdings.schemeCode');
+      // Calculate portfolio value using service
+      const portfolioValue = await PortfolioService.calculatePortfolioValue(userId);
       
-      if (!portfolio || portfolio.holdings.length === 0) {
+      if (!portfolioValue.holdings || portfolioValue.holdings.length === 0) {
         return res.status(200).json(
           PortfolioResponse.formatEmptyPortfolioResponse('Your portfolio is empty')
         );
       }
 
-      // Calculate current portfolio value
-      const portfolioValue = await PortfolioHelpers.calculateCurrentPortfolioValue(portfolio);
-      
-      if (!portfolioValue.status) {
-        return res.status(500).json(
-          PortfolioResponse.formatErrorResponse('Failed to calculate portfolio value', portfolioValue.message)
-        );
-      }
-
       res.status(200).json(
-        PortfolioResponse.formatPortfolioValueResponse(portfolioValue.data)
+        PortfolioResponse.formatPortfolioValueResponse(portfolioValue)
       );
 
     } catch (error) {
@@ -124,23 +110,17 @@ class PortfolioController {
         throw new CustomValidationError('Invalid query parameters', validatedQuery.errors);
       }
 
-      // Get user's portfolio with pagination
-      const portfolio = await Portfolio.getPortfolioWithPagination(userId, validatedQuery.data);
+      // Get user's portfolio using service
+      const portfolioData = await PortfolioService.getUserPortfolio(userId);
       
-      if (!portfolio.status) {
-        return res.status(500).json(
-          PortfolioResponse.formatErrorResponse('Failed to fetch portfolio', portfolio.message)
-        );
-      }
-
-      if (!portfolio.data || portfolio.data.holdings.length === 0) {
+      if (!portfolioData || portfolioData.length === 0) {
         return res.status(200).json(
           PortfolioResponse.formatEmptyPortfolioResponse('Your portfolio is empty')
         );
       }
 
       res.status(200).json(
-        PortfolioResponse.formatPortfolioListResponse(portfolio.data)
+        PortfolioResponse.formatPortfolioListResponse(portfolioData)
       );
 
     } catch (error) {
@@ -202,57 +182,64 @@ class PortfolioController {
     }
   }
 
-  // DELETE /api/portfolio/remove/:schemeCode - Remove fund from portfolio
-  static async removeFund(req, res) {
+  // POST /api/portfolio/sell - Sell units from portfolio
+  static async sellFund(req, res) {
     try {
-      const { schemeCode } = req.params;
+      // Validate request
+      const validationResult = PortfolioRequest.validateSellFund(req.body);
+      if (!validationResult.isValid) {
+        throw new CustomValidationError('Validation failed', validationResult.errors);
+      }
+
+      const { schemeCode, units } = validationResult.data;
       const userId = req.user.id;
 
-      // Validate scheme code
-      const validationResult = PortfolioRequest.validateSchemeCode(schemeCode);
-      if (!validationResult.isValid) {
-        throw new CustomValidationError('Invalid scheme code', validationResult.errors);
+      // Check if fund exists
+      const fund = await Fund.findOne({ schemeCode });
+      if (!fund) {
+        return res.status(404).json({
+          success: false,
+          message: 'Fund not found with the provided scheme code'
+        });
       }
 
-      // Get user's portfolio
-      const portfolio = await Portfolio.findOne({ userId });
-      
-      if (!portfolio) {
-        return res.status(404).json(
-          PortfolioResponse.formatErrorResponse('Portfolio not found', 'User does not have a portfolio')
-        );
+      // Get latest NAV for the fund
+      const navData = await NavService.getLatestNav(schemeCode);
+      if (!navData || !navData.success || !navData.data || !navData.data.nav) {
+        return res.status(400).json({
+          success: false,
+          message: 'Unable to fetch current NAV for this fund. Please try again later.'
+        });
       }
 
-      // Remove fund from portfolio
-      const result = await portfolio.removeAllUnits(parseInt(schemeCode));
-      
-      if (!result.status) {
-        if (result.message.includes('not found')) {
-          return res.status(404).json(
-            PortfolioResponse.formatErrorResponse('Fund not found in portfolio', result.message)
-          );
-        }
-        
-        return res.status(500).json(
-          PortfolioResponse.formatErrorResponse('Failed to remove fund from portfolio', result.message)
-        );
-      }
+      // Sell units using service
+      const result = await PortfolioService.removeUnits(userId, schemeCode, units, navData.data.nav, new Date());
 
-      res.status(200).json(
-        PortfolioResponse.formatRemoveFundResponse(result.data)
-      );
+      // Format response
+      const responseData = PortfolioResponse.formatSellFundResponse({
+        schemeCode,
+        schemeName: fund.schemeName,
+        units,
+        nav: navData.data.nav,
+        saleAmount: units * navData.data.nav,
+        realizedPL: result.realizedPL,
+        date: new Date(),
+        transactionId: result.transaction._id
+      });
+
+      res.status(200).json(responseData);
 
     } catch (error) {
-      console.error('Remove fund from portfolio error:', error);
+      console.error('Sell fund from portfolio error:', error);
       
       if (error instanceof CustomValidationError) {
         return res.status(400).json(
-          PortfolioResponse.formatValidationErrorResponse('Invalid request parameters', error.errors)
+          PortfolioResponse.formatValidationErrorResponse('Invalid request data', error.errors)
         );
       }
       
       res.status(500).json(
-        PortfolioResponse.formatErrorResponse('Failed to remove fund from portfolio. Please try again.')
+        PortfolioResponse.formatErrorResponse('Failed to sell fund from portfolio. Please try again.')
       );
     }
   }

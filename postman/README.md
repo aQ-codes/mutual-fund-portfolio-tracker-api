@@ -1,12 +1,44 @@
 # Mutual Fund Portfolio Tracker - Postman Collection
 
-This directory contains the complete Postman collection and environments for testing the Mutual Fund Portfolio Tracker API.
+This directory contains the complete Postman collection and environments for testing the Mutual Fund Portfolio Tracker API with comprehensive test scenarios.
 
-## Files
+## 🚀 Features
 
-- `Mutual_Fund_Portfolio_Tracker_API.postman_collection.json` - Main API collection
-- `Development.postman_environment.json` - Development environment variables
-- `Production.postman_environment.json` - Production environment variables
+- **Complete API Coverage**: All endpoints with multiple test scenarios
+- **New Schema Support**: Three-collection architecture with avgNav calculations
+- **Transaction Tracking**: Complete audit trail with FIFO P&L calculations
+- **Multiple Examples**: Each request includes success and error cases
+- **Automatic Token Management**: JWT tokens are automatically set after login
+- **Environment Variables**: Separate development and production configs
+- **Test Scripts**: Automatic validation of responses with new schema fields
+- **Professional Structure**: Organized folders and descriptive naming
+
+## 📁 Files
+
+- `Mutual_Fund_Portfolio_Tracker_API.postman_collection.json` - Main API collection with examples
+- `Development.postman_environment.json` - Development environment (localhost:5000)
+- `Production.postman_environment.json` - Production environment template
+
+## 🔗 Base URLs
+
+- **Development**: `http://localhost:5000` (without /api suffix)
+- **Production**: `https://your-production-domain.com` (without /api suffix)
+
+All API endpoints are automatically prefixed with `/api` in the requests.
+
+## Environment Setup
+
+### Configure Admin Credentials
+Before running the API, set up your environment variables in `.env`:
+
+```bash
+# Admin User Configuration (used by seeder)
+ADMIN_NAME=Admin User
+ADMIN_EMAIL=admin@mutualfund.com
+ADMIN_PASSWORD=Admin@123456
+```
+
+The admin seeder will use these values to create the admin user. If not provided, it falls back to default values.
 
 ## Quick Start
 
@@ -19,12 +51,24 @@ This directory contains the complete Postman collection and environments for tes
 
 ### 2. Test Authentication Flow
 
-1. **User Signup**: Create a new test user
-   - Automatically sets `auth_token` and `user_id` variables
-   - Use the prefilled test data or modify as needed
+#### User Signup Examples:
+- ✅ **Success Case**: Valid user registration
+- ❌ **Weak Password**: Password validation error
+- ❌ **Invalid Email**: Email format validation  
+- ❌ **Missing Fields**: Required field validation
+- ❌ **Duplicate Email**: Email already exists error
 
-2. **User Login**: Login with existing credentials
-   - Also sets authentication variables automatically
+#### User Login Examples:
+- ✅ **Success Case**: Valid credentials
+- ❌ **Wrong Password**: Invalid credentials error
+- ❌ **User Not Found**: Non-existent user error
+- ❌ **Missing Fields**: Required field validation
+
+**How to Use Examples:**
+1. Click on "User Signup" or "User Login" request
+2. See multiple examples in the right panel
+3. Click any example → "Try" → Opens in new tab
+4. Click "Send" to test that scenario
 
 ### 3. Test Fund Operations
 

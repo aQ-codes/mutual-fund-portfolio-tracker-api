@@ -30,7 +30,6 @@ const UserSchema = new mongoose.Schema({
   timestamps: true 
 });
 
-// Email index is already created by the unique: true option above
 
 // Hash password before saving
 UserSchema.pre('save', async function(next) {

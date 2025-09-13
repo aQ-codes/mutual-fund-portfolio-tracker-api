@@ -1,7 +1,8 @@
 import { mfApi } from '../config/axios.js';
 import config from '../config/env.js';
+import NavHelpers from '../helpers/nav-helpers.js';
 
-class ExternalNavApi {
+class FundApi {
   // Get all available mutual funds
   static async getAllFunds() {
     try {
@@ -29,14 +30,12 @@ class ExternalNavApi {
         throw new Error('Invalid response format from external API');
       }
       
-      // Filter active funds (scheme codes between 150507 and 153826) and take limit
-      const activeFunds = response.data.filter(fund => 
-        fund.schemeCode >= 150507 && fund.schemeCode <= 153826
-      );
+      // Filter active funds using helper function
+      const activeFunds = NavHelpers.filterActiveFunds(response.data);
       
       const limitedFunds = activeFunds.slice(0, limit);
       
-      console.log(`📊 Found ${activeFunds.length} active funds, taking ${limitedFunds.length}`);
+      console.log(`Found ${activeFunds.length} active funds, taking ${limitedFunds.length}`);
       
       return {
         success: true,
@@ -105,43 +104,19 @@ class ExternalNavApi {
         
         // Add delay between batches to be respectful to the API
         if (i + batchSize < schemeCodes.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+          await NavHelpers.createDelay(1000); // 1 second delay
         }
       } catch (error) {
         console.error('Error in batch processing:', error);
       }
     }
     
-    return results.map((result, index) => ({
-      schemeCode: schemeCodes[index],
-      success: result.status === 'fulfilled' && result.value.success,
-      data: result.status === 'fulfilled' ? result.value.data : null,
-      error: result.status === 'rejected' ? result.reason : 
-             (result.value && !result.value.success ? result.value.error : null)
-    }));
+    return NavHelpers.processBatchResults(results, schemeCodes);
   }
 
-  // Helper method to parse and validate NAV data
+  // Helper method to parse and validate NAV data (delegates to helper)
   static parseNavData(apiResponse) {
-    if (!apiResponse || !apiResponse.data) {
-      return null;
-    }
-
-    const fundData = apiResponse.data;
-    
-    return {
-      schemeCode: parseInt(fundData.schemeCode),
-      schemeName: fundData.schemeName,
-      isinGrowth: fundData.isinGrowth,
-      isinDivReinvestment: fundData.isinDivReinvestment,
-      fundHouse: fundData.fundHouse,
-      schemeType: fundData.schemeType,
-      schemeCategory: fundData.schemeCategory,
-      navHistory: fundData.data ? fundData.data.map(item => ({
-        date: item.date,
-        nav: parseFloat(item.nav)
-      })) : []
-    };
+    return NavHelpers.parseNavData(apiResponse);
   }
 
   // Get recent NAV history (last N days)
@@ -163,8 +138,8 @@ class ExternalNavApi {
         };
       }
 
-      // Get last N days of data (API returns data in descending order by date)
-      const recentHistory = parsedData.navHistory.slice(0, days);
+      // Get last N days of data using helper function
+      const recentHistory = NavHelpers.getRecentNavHistory(parsedData, days);
       
       return {
         success: true,
@@ -184,4 +159,4 @@ class ExternalNavApi {
   }
 }
 
-export default ExternalNavApi;
+export default FundApi;

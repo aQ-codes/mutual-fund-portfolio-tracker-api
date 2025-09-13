@@ -1,6 +1,6 @@
-// Generic FIFO (First In, First Out) calculation utilities
+// FIFO (First In, First Out) calculation helpers for portfolio management
 
-class FifoUtils {
+class FifoHelpers {
   // Calculate FIFO sell operation - returns remaining lots and realized P/L
   static calculateFifoSell(lots, unitsToSell, currentPrice) {
     if (!lots || lots.length === 0 || unitsToSell <= 0) {
@@ -133,19 +133,6 @@ class FifoUtils {
       return currentDate < oldestDate ? current : oldest;
     });
   }
-
-  // Get newest lot (for LIFO operations if needed)
-  static getNewestLot(lots) {
-    if (!lots || lots.length === 0) {
-      return null;
-    }
-    
-    return lots.reduce((newest, current) => {
-      const newestDate = new Date(newest.date);
-      const currentDate = new Date(current.date);
-      return currentDate > newestDate ? current : newest;
-    });
-  }
 }
 
-export default FifoUtils;
+export default FifoHelpers;

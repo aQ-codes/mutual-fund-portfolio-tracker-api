@@ -26,6 +26,31 @@ class PortfolioRequest {
       })
   });
 
+  // Validation schema for selling fund from portfolio
+  static sellFundSchema = Joi.object({
+    schemeCode: Joi.number()
+      .integer()
+      .min(100000)
+      .max(999999)
+      .required()
+      .messages({
+        'number.base': 'Scheme code must be a number',
+        'number.integer': 'Scheme code must be an integer',
+        'number.min': 'Scheme code must be at least 100000',
+        'number.max': 'Scheme code cannot exceed 999999',
+        'any.required': 'Scheme code is required'
+      }),
+    units: Joi.number()
+      .positive()
+      .precision(3)
+      .required()
+      .messages({
+        'number.base': 'Units must be a number',
+        'number.positive': 'Units must be greater than 0',
+        'any.required': 'Units is required'
+      })
+  });
+
   // Validation schema for scheme code parameter
   static schemeCodeSchema = Joi.object({
     schemeCode: Joi.number()
@@ -73,6 +98,29 @@ class PortfolioRequest {
   // Validate add fund request
   static validateAddFund(data) {
     const { error, value } = this.addFundSchema.validate(data, { 
+      abortEarly: false,
+      stripUnknown: true 
+    });
+
+    if (error) {
+      return {
+        isValid: false,
+        errors: error.details.map(detail => ({
+          field: detail.path.join('.'),
+          message: detail.message
+        }))
+      };
+    }
+
+    return {
+      isValid: true,
+      data: value
+    };
+  }
+
+  // Validate sell fund request
+  static validateSellFund(data) {
+    const { error, value } = this.sellFundSchema.validate(data, { 
       abortEarly: false,
       stripUnknown: true 
     });

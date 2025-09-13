@@ -1,17 +1,18 @@
 // Portfolio-specific business logic helpers
 import MathUtils from '../utils/math-utils.js';
 import FormatUtils from '../utils/format-utils.js';
-import FifoUtils from '../utils/fifo-utils.js';
+import CurrencyUtils from '../utils/currency-utils.js';
+import FifoHelpers from './fifo-helpers.js';
 
 class PortfolioHelpers {
-  // Calculate average cost for a holding (delegated to FifoUtils)
+  // Calculate average cost for a holding (delegated to FifoHelpers)
   static calculateAverageCost(lots) {
-    return FifoUtils.calculateWeightedAverageCost(lots);
+    return FifoHelpers.calculateWeightedAverageCost(lots);
   }
 
-  // FIFO sell calculation (delegated to FifoUtils)
+  // FIFO sell calculation (delegated to FifoHelpers)
   static calculateFifoSell(lots, unitsToSell, currentNav) {
-    return FifoUtils.calculateFifoSell(lots, unitsToSell, currentNav);
+    return FifoHelpers.calculateFifoSell(lots, unitsToSell, currentNav);
   }
 
   // Calculate current portfolio value
@@ -100,9 +101,9 @@ class PortfolioHelpers {
     };
   }
 
-  // Format currency values (delegated to FormatUtils)
+  // Format currency values (delegated to CurrencyUtils)
   static formatCurrency(amount, currency = '₹') {
-    return FormatUtils.formatCurrency(amount, currency);
+    return CurrencyUtils.formatCurrency(amount, currency);
   }
 
   // Calculate units from amount and NAV

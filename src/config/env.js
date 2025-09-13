@@ -29,6 +29,11 @@ const config = {
   
   // Cron Jobs
   cronSchedule: process.env.CRON_SCHEDULE || '0 0 * * *', // Daily at 12:00 AM IST
+  
+  // Admin User Configuration
+  ADMIN_NAME: process.env.ADMIN_NAME || 'Admin',
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@mutualfund.com',
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'Admin@123456',
 };
 
 // Validation (from full-project)

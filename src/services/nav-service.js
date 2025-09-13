@@ -1,7 +1,7 @@
 import { mfApi } from '../config/axios.js';
-import LatestNav from '../models/latestNav.js';
-import FundHistory from '../models/fundHistory.js';
-import Fund from '../models/fund.js';
+import FundLatestNav from '../models/fund-latest-nav.js';
+import FundNavHistory from '../models/fund-nav-history.js';
+import Fund from '../models/funds.js';
 
 class NavService {
   // Fetch latest NAV from external API with retry logic
@@ -24,11 +24,16 @@ class NavService {
           throw new Error('Missing NAV or date in response');
         }
         
+        // Convert date string to Date object
+        const dateObj = navData.date.includes('-') ? 
+          new Date(navData.date.split('-').reverse().join('-')) : 
+          new Date(navData.date);
+        
         return {
           success: true,
           data: {
             nav: parseFloat(navData.nav),
-            date: navData.date,
+            date: dateObj,
             // Include metadata for fund details
             meta: metaData ? {
               fundHouse: metaData.fund_house,
@@ -76,10 +81,15 @@ class NavService {
         return {
           success: true,
           data: {
-            history: historyData.map(item => ({
-              date: item.date,
-              nav: parseFloat(item.nav)
-            })),
+            history: historyData.map(item => {
+              const dateObj = item.date.includes('-') ? 
+                new Date(item.date.split('-').reverse().join('-')) : 
+                new Date(item.date);
+              return {
+                date: dateObj,
+                nav: parseFloat(item.nav)
+              };
+            }),
             meta: metaData ? {
               fundHouse: metaData.fund_house,
               schemeType: metaData.scheme_type,
@@ -112,7 +122,7 @@ class NavService {
   static async getLatestNav(schemeCode) {
     try {
       // First try to get from database
-      const latestNav = await LatestNav.findOne({ schemeCode });
+      const latestNav = await FundLatestNav.findOne({ schemeCode });
       
       if (latestNav) {
         return {
@@ -134,7 +144,7 @@ class NavService {
       }
       
       // Store in database for future use
-      await LatestNav.updateNav(schemeCode, apiResult.data.nav, apiResult.data.date);
+      await FundLatestNav.updateNav(schemeCode, apiResult.data.nav, apiResult.data.date);
       
       return {
         success: true,
@@ -165,9 +175,9 @@ class NavService {
         let history;
         
         if (startDate && endDate) {
-          history = await FundHistory.getHistoryByDateRange(schemeCode, startDate, endDate);
+          history = await FundNavHistory.getHistoryByDateRange(schemeCode, startDate, endDate);
         } else {
-          history = await FundHistory.getRecentHistory(schemeCode, days);
+          history = await FundNavHistory.getRecentHistory(schemeCode, days);
         }
         
         if (history && history.length > 0) {
@@ -213,7 +223,7 @@ class NavService {
         }));
         
         // Bulk upsert (fire and forget, don't wait)
-        FundHistory.bulkUpsert(historyData).catch(err => 
+        FundNavHistory.bulkUpsert(historyData).catch(err => 
           console.error('Error caching history data:', err)
         );
       }
@@ -290,11 +300,11 @@ class NavService {
       // Process batch sequentially to avoid overwhelming the API
       for (const schemeCode of batch) {
         try {
-          const result = await this.fetchLatestNav(schemeCode);
-          
-          if (result.success) {
-            // Update database
-            await LatestNav.updateNav(schemeCode, result.data.nav, result.data.date);
+            const result = await this.fetchLatestNav(schemeCode);
+            
+            if (result.success) {
+              // Update database
+              await FundLatestNav.updateNav(schemeCode, result.data.nav, result.data.date);
             results.successful.push({
               schemeCode,
               nav: result.data.nav,
@@ -341,7 +351,7 @@ class NavService {
 
     try {
       // Get latest NAVs from database first
-      const latestNavs = await LatestNav.find({ 
+      const latestNavs = await FundLatestNav.find({ 
         schemeCode: { $in: schemeCodes } 
       });
 
@@ -404,19 +414,40 @@ class NavService {
   }
 
   /**
-   * Save latest NAV to database
+   * Save latest NAV to database by fundId
+   * @param {ObjectId} fundId - Fund ObjectId
    * @param {number} schemeCode - Scheme code
    * @param {number} nav - NAV value
-   * @param {string} date - Date in DD-MM-YYYY format
+   * @param {Date} date - Date object
+   */
+  static async saveLatestNavByFundId(fundId, schemeCode, nav, date) {
+    try {
+      await FundLatestNav.updateNavByFundId(fundId, schemeCode, parseFloat(nav), date);
+    } catch (error) {
+      console.error(`Error saving latest NAV for fund ${fundId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save latest NAV to database (backward compatibility)
+   * @param {number} schemeCode - Scheme code
+   * @param {number} nav - NAV value
+   * @param {Date|string} date - Date object or string
    */
   static async saveLatestNav(schemeCode, nav, date) {
     try {
-      await LatestNav.findOneAndUpdate(
+      const dateObj = date instanceof Date ? date : 
+        (typeof date === 'string' && date.includes('-') ? 
+          new Date(date.split('-').reverse().join('-')) : 
+          new Date(date));
+
+      await FundLatestNav.findOneAndUpdate(
         { schemeCode },
         { 
           schemeCode,
           nav: parseFloat(nav),
-          date,
+          date: dateObj,
           updatedAt: new Date()
         },
         { 
@@ -431,24 +462,73 @@ class NavService {
   }
 
   /**
-   * Save NAV to history collection
+   * Save NAV to history collection by fundId
+   * @param {ObjectId} fundId - Fund ObjectId
    * @param {number} schemeCode - Scheme code
    * @param {number} nav - NAV value
-   * @param {string} date - Date in DD-MM-YYYY format
+   * @param {Date} date - Date object
    */
-  static async saveNavHistory(schemeCode, nav, date) {
+  static async saveNavHistoryByFundId(fundId, schemeCode, nav, date) {
     try {
-      // Check if entry already exists for this date
-      const existing = await FundHistory.findOne({ schemeCode, date });
+      // Check if entry already exists for this fund and date
+      const existing = await FundNavHistory.findOne({ fundId, date });
       
       if (!existing) {
-        await FundHistory.create({
+        await FundNavHistory.create({
+          fundId,
           schemeCode,
           nav: parseFloat(nav),
-          date,
-          createdAt: new Date()
+          date
         });
+        
+        // Maintain 50 entry limit
+        await FundNavHistory.maintainHistoryLimit(fundId, 30);
       }
+    } catch (error) {
+      console.error(`Error saving NAV history for fund ${fundId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save NAV to history collection (backward compatibility)
+   * @param {number} schemeCode - Scheme code
+   * @param {number} nav - NAV value
+   * @param {Date|string} date - Date object or string
+   */
+  static async saveLatestNavByFundId(fundId, schemeCode, nav, date) {
+    try {
+      const dateObj = date instanceof Date ? date : 
+        (typeof date === 'string' && date.includes('-') ? 
+          new Date(date.split('-').reverse().join('-')) : 
+          new Date(date));
+      await FundLatestNav.updateNavByFundId(fundId, schemeCode, parseFloat(nav), dateObj);
+    } catch (error) {
+      console.error(`Error saving latest NAV for fundId ${fundId}:`, error);
+      throw error;
+    }
+  }
+
+  static async saveNavHistoryByFundId(fundId, schemeCode, nav, date) {
+    try {
+      const dateObj = date instanceof Date ? date : 
+        (typeof date === 'string' && date.includes('-') ? 
+          new Date(date.split('-').reverse().join('-')) : 
+          new Date(date));
+      await FundNavHistory.addNavEntry(fundId, schemeCode, parseFloat(nav), dateObj);
+    } catch (error) {
+      console.error(`Error saving NAV history for fundId ${fundId}:`, error);
+      throw error;
+    }
+  }
+
+  static async saveNavHistory(schemeCode, nav, date) {
+    try {
+      const fund = await Fund.findOne({ schemeCode });
+      if (!fund) {
+        throw new Error(`Fund not found for scheme ${schemeCode}`);
+      }
+      await this.saveNavHistoryByFundId(fund._id, schemeCode, nav, date);
     } catch (error) {
       console.error(`Error saving NAV history for scheme ${schemeCode}:`, error);
       throw error;

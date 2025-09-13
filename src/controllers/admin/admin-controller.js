@@ -1,8 +1,8 @@
 import User from '../../models/user.js';
 import Portfolio from '../../models/portfolio.js';
 import Transaction from '../../models/transaction.js';
-import Fund from '../../models/fund.js';
-import LatestNav from '../../models/latestNav.js';
+import Fund from '../../models/funds.js';
+import FundLatestNav from '../../models/fund-latest-nav.js';
 import AdminRequest from '../../requests/admin/admin-request.js';
 import AdminResponse from '../../responses/admin/admin-response.js';
 import CronService from '../../services/cron-service.js';
@@ -165,7 +165,7 @@ class AdminController {
       // Get fund details for popular funds
       const schemeCodes = popularFunds.map(fund => fund._id);
       const fundDetails = await Fund.find({ schemeCode: { $in: schemeCodes } });
-      const latestNavs = await LatestNav.find({ schemeCode: { $in: schemeCodes } });
+      const latestNavs = await FundLatestNav.find({ schemeCode: { $in: schemeCodes } });
 
       // Format response
       const responseData = AdminResponse.formatPopularFundsResponse(

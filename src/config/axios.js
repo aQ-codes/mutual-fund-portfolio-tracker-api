@@ -15,12 +15,12 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     }
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error.message);
+    console.error('Request Error:', error.message);
     return Promise.reject(error);
   }
 );
@@ -29,7 +29,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`✅ API Response: ${response.status} ${response.config.url}`);
+      console.log(`API Response: ${response.status} ${response.config.url}`);
     }
     return response;
   },
@@ -37,7 +37,7 @@ axiosInstance.interceptors.response.use(
     const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
     const status = error.response?.status || 'Network Error';
     
-    console.error(`❌ API Error [${status}]: ${errorMsg}`);
+    console.error(`API Error [${status}]: ${errorMsg}`);
     
     // Enhanced error object
     const enhancedError = new Error(errorMsg);
