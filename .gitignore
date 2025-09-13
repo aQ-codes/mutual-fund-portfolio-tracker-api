@@ -2,10 +2,7 @@ node_modules
 yarn.lock
 .DS_Store
 .env
-env.example
 # Ignore all env files
 .env*
 expense_tracker_user_frontend
 user_frontend
-admin_frontend
-postman
