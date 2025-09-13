@@ -60,7 +60,7 @@ class AdminSeeder {
 }
 
 // Run seeder if called directly
-if (process.argv[1].endsWith('admin-seeder.js')) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   AdminSeeder.run();
 }
 

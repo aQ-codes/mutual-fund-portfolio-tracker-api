@@ -16,10 +16,16 @@ class MasterSeeder {
       console.log('\nRunning Admin Seeder...');
       await AdminSeeder.seedAdmin();
       
-      // Run fund seeder
-      console.log('\nRunning Fund Seeder...');
-      const fundSeeder = new FundSeeder();
-      await fundSeeder.seedAllFunds();
+      // Check if we should seed funds (skip in production to avoid build timeouts)
+      const shouldSeedFunds = process.env.SEED_FUNDS === 'true' || process.env.NODE_ENV === 'development';
+      
+      if (shouldSeedFunds) {
+        console.log('\nRunning Fund Seeder...');
+        const fundSeeder = new FundSeeder();
+        await fundSeeder.seedAllFunds();
+      } else {
+        console.log('\nSkipping Fund Seeder in production (set SEED_FUNDS=true to enable)');
+      }
       
       console.log('\n==========================================');
       console.log('All seeders completed successfully!');
@@ -45,8 +51,8 @@ class MasterSeeder {
   }
 }
 
-// Run if called directly
-if (process.argv[1].endsWith('run-all-seeders.js')) {
+// Run if called directly (not when imported)
+if (import.meta.url === `file://${process.argv[1]}`) {
   MasterSeeder.runAllSeeders();
 }
 

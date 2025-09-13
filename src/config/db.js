@@ -5,7 +5,8 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(config.mongoUri);
     
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Connected: ${conn.connection.host || 'localhost'}`);
+    console.log(`Database: ${conn.connection.name}`);
     
     return conn;
   } catch (error) {

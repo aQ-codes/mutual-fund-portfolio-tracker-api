@@ -6,6 +6,7 @@ import transactionRoutes from './user/transaction.js';
 import adminRoutes from './admin/admin.js';
 import adminFundRoutes from './admin/funds.js';
 import adminAuthRoutes from './admin/auth.js';
+import adminSeedRoutes from './admin/seed.js';
 
 const configureRoutes = (app) => {
   // API version prefix
@@ -37,6 +38,7 @@ const configureRoutes = (app) => {
   app.use(`${API_PREFIX}/admin/auth`, adminAuthRoutes);
   app.use(`${API_PREFIX}/admin`, adminRoutes);
   app.use(`${API_PREFIX}/admin/funds`, adminFundRoutes);
+  app.use(`${API_PREFIX}/admin/seed`, adminSeedRoutes);
   
   // API route not found handler
   app.use(`${API_PREFIX}/*`, (req, res) => {
