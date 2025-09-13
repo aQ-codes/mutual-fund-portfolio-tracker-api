@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import Portfolio from '../models/portfolio.js';
+import Portfolio from '../models/Portfolio.js';
 import Fund from '../models/funds.js';
 import NavService from './nav-service.js';
 import config from '../config/env.js';

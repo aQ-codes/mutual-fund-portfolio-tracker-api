@@ -1,5 +1,5 @@
-import Transaction from '../models/transaction.js';
-import Portfolio from '../models/portfolio.js';
+import Transaction from '../models/Transaction.js';
+import Portfolio from '../models/Portfolio.js';
 
 class TransactionRepository {
   /**

@@ -1,5 +1,5 @@
-import Portfolio from '../models/portfolio.js';
-import Transaction from '../models/transaction.js';
+import Portfolio from '../models/Portfolio.js';
+import Transaction from '../models/Transaction.js';
 import Holding from '../models/holding.js';
 import Fund from '../models/funds.js';
 import NavService from './nav-service.js';

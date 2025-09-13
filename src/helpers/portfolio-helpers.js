@@ -130,7 +130,7 @@ class PortfolioHelpers {
       const { days = 30, startDate, endDate } = options;
       
       // Import required modules
-      const Portfolio = (await import('../models/portfolio.js')).default;
+      const Portfolio = (await import('../models/Portfolio.js')).default;
       const Holding = (await import('../models/holding.js')).default;
       const FundNavHistory = (await import('../models/fund-nav-history.js')).default;
       const DateUtils = (await import('../utils/date-utils.js')).default;
