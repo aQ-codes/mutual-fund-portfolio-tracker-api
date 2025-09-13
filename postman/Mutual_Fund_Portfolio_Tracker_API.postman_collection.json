@@ -583,6 +583,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -605,7 +615,7 @@
 								}
 							]
 						},
-						"description": "Retrieve all mutual funds with pagination"
+						"description": "Retrieve all mutual funds with pagination (requires authentication)"
 					},
 					"response": [
 						{
@@ -651,6 +661,16 @@
 				{
 					"name": "Search Funds",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -678,12 +698,22 @@
 								}
 							]
 						},
-						"description": "Search funds by name or fund house"
+						"description": "Search funds by name or fund house (requires authentication)"
 					}
 				},
 				{
 					"name": "Get Fund NAV History",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -704,7 +734,7 @@
 								}
 							]
 						},
-						"description": "Get NAV history for a specific fund"
+						"description": "Get NAV history for a specific fund (requires authentication)"
 					}
 				}
 			]
@@ -1058,6 +1088,161 @@
 							"body": "{\n  \"success\": true,\n  \"message\": \"Fund sold from portfolio successfully\",\n  \"data\": {\n    \"transactionId\": \"64f1234567890abcdef12345\",\n    \"schemeCode\": 152075,\n    \"schemeName\": \"HDFC Flexi Cap Fund - Growth\",\n    \"units\": 50.25,\n    \"nav\": 725.45,\n    \"saleAmount\": 36453.88,\n    \"realizedPL\": 2150.75,\n    \"soldAt\": \"2023-09-01T10:30:00.000Z\"\n  }\n}"
 						}
 					]
+				},
+				{
+					"name": "Get Portfolio History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.test('Portfolio history retrieved successfully', () => {",
+									"        pm.expect(response.success).to.be.true;",
+									"        pm.expect(response.data).to.be.an('array');",
+									"        if (response.data.length > 0) {",
+									"            pm.expect(response.data[0]).to.have.property('date');",
+									"            pm.expect(response.data[0]).to.have.property('totalValue');",
+									"            pm.expect(response.data[0]).to.have.property('profitLoss');",
+									"            pm.expect(response.data[0].totalValue).to.be.a('number');",
+									"            pm.expect(response.data[0].profitLoss).to.be.a('number');",
+									"        }",
+									"    });",
+									"} else if (pm.response.code === 401) {",
+									"    pm.test('Authentication required', () => {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response.success).to.be.false;",
+									"        pm.expect(response.message).to.include('token');",
+									"    });",
+									"} else {",
+									"    pm.test('Error response format', () => {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response.success).to.be.false;",
+									"        pm.expect(response.message).to.exist;",
+									"    });",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/portfolio/history?days=30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"portfolio",
+								"history"
+							],
+							"query": [
+								{
+									"key": "days",
+									"value": "30",
+									"description": "Number of days to get history for (default: 30)"
+								},
+								{
+									"key": "startDate",
+									"value": "01-08-2025",
+									"description": "Start date in DD-MM-YYYY format",
+									"disabled": true
+								},
+								{
+									"key": "endDate",
+									"value": "09-09-2025",
+									"description": "End date in DD-MM-YYYY format",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get portfolio value history (last 30 days or custom date range)"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Fund from Portfolio",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.test('Fund removed from portfolio successfully', () => {",
+									"        pm.expect(response.success).to.be.true;",
+									"        pm.expect(response.message).to.include('removed');",
+									"        pm.expect(response.data).to.exist;",
+									"    });",
+									"} else if (pm.response.code === 404) {",
+									"    pm.test('Fund not found in portfolio', () => {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response.success).to.be.false;",
+									"        pm.expect(response.message).to.include('not found');",
+									"    });",
+									"} else if (pm.response.code === 429) {",
+									"    pm.test('Rate limit hit', () => {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response.message).to.include('Too many portfolio updates');",
+									"    });",
+									"} else if (pm.response.code === 401) {",
+									"    pm.test('Authentication required', () => {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response.success).to.be.false;",
+									"        pm.expect(response.message).to.include('token');",
+									"    });",
+									"} else {",
+									"    pm.test('Error response format', () => {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response.success).to.be.false;",
+									"        pm.expect(response.message).to.exist;",
+									"    });",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/portfolio/remove/{{scheme_code}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"portfolio",
+								"remove",
+								"{{scheme_code}}"
+							]
+						},
+						"description": "Remove a fund completely from the user's portfolio by scheme code"
+					},
+					"response": []
 				}
 			]
 		},

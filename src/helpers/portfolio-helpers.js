@@ -132,10 +132,10 @@ class PortfolioHelpers {
       // Import required modules
       const Portfolio = (await import('../models/portfolio.js')).default;
       const Holding = (await import('../models/holding.js')).default;
-      const NavService = (await import('../services/nav-service.js')).default;
+      const FundNavHistory = (await import('../models/fund-nav-history.js')).default;
       const DateUtils = (await import('../utils/date-utils.js')).default;
       
-      // Get user's portfolios
+      // Get user's portfolios with holdings
       const portfolios = await Portfolio.find({ userId });
       
       if (!portfolios || portfolios.length === 0) {
@@ -144,6 +144,35 @@ class PortfolioHelpers {
           data: []
         };
       }
+      
+      // Get all holdings for the user's portfolios
+      const portfolioIds = portfolios.map(p => p._id);
+      const holdings = await Holding.find({ portfolioId: { $in: portfolioIds } });
+      
+      if (!holdings || holdings.length === 0) {
+        return {
+          status: true,
+          data: []
+        };
+      }
+      
+      // Get unique scheme codes from holdings
+      const schemeCodes = [...new Set(holdings.map(h => h.schemeCode))];
+      
+      // Get historical NAV data for all funds
+      const navHistoryData = await FundNavHistory.find({ 
+        schemeCode: { $in: schemeCodes } 
+      });
+      
+      // Create a map of scheme code to NAV history for quick lookup
+      const navHistoryMap = {};
+      navHistoryData.forEach(fund => {
+        if (fund.history && fund.history.length > 0) {
+          // Sort history by date (newest first) for efficient lookup
+          fund.history.sort((a, b) => new Date(b.date) - new Date(a.date));
+          navHistoryMap[fund.schemeCode] = fund.history;
+        }
+      });
       
       // Generate date range
       let dateRange = [];
@@ -167,26 +196,41 @@ class PortfolioHelpers {
       
       const history = [];
       
-      // For each date, calculate total portfolio value
+      // For each date, calculate total portfolio value using historical NAVs
       for (const date of dateRange) {
         let totalInvestment = 0;
         let currentValue = 0;
         
-        for (const portfolio of portfolios) {
-          const holding = await Holding.findOne({ 
-            portfolioId: portfolio._id, 
-            schemeCode: portfolio.schemeCode 
-          });
-          
-          if (holding && holding.totalUnits > 0) {
-            // For historical dates, we'd need historical NAV
-            // For now, using current NAV as approximation
-            const navData = await NavService.getLatestNav(portfolio.schemeCode);
-            const nav = navData.success ? navData.data.nav : holding.avgNav;
-            
-            totalInvestment += holding.investedValue;
-            currentValue += holding.totalUnits * nav;
+        for (const holding of holdings) {
+          // Only calculate for holdings that existed on or before this date
+          const holdingStartDate = new Date(holding.createdAt);
+          if (date < holdingStartDate) {
+            continue; // Skip if holding didn't exist on this date
           }
+          
+          totalInvestment += holding.investedValue;
+          
+          // Get historical NAV for this date
+          const navHistory = navHistoryMap[holding.schemeCode];
+          let navForDate = null;
+          
+          if (navHistory) {
+            // Find the NAV for this specific date or the closest previous date
+            for (const navEntry of navHistory) {
+              const navDate = new Date(navEntry.date);
+              if (navDate <= date) {
+                navForDate = navEntry.nav;
+                break;
+              }
+            }
+          }
+          
+          // If no historical NAV found, use average NAV as fallback
+          if (navForDate === null) {
+            navForDate = holding.avgNav;
+          }
+          
+          currentValue += holding.totalUnits * navForDate;
         }
         
         const profitLoss = currentValue - totalInvestment;

@@ -104,13 +104,11 @@ class PortfolioResponse {
   static formatPortfolioHistoryResponse(data) {
     return {
       success: true,
-      data: {
-        history: data.map(entry => ({
-          date: entry.date,
-          totalValue: parseFloat(entry.totalValue.toFixed(2)),
-          profitLoss: parseFloat(entry.profitLoss.toFixed(2))
-        }))
-      }
+      data: data.map(entry => ({
+        date: entry.date,
+        totalValue: parseFloat(entry.totalValue.toFixed(2)),
+        profitLoss: parseFloat(entry.profitLoss.toFixed(2))
+      }))
     };
   }
 

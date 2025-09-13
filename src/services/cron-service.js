@@ -225,8 +225,17 @@ class CronService {
     console.log('Destroying all cron jobs...');
     
     this.jobs.forEach((job, name) => {
-      job.destroy();
-      console.log(`Destroyed cron job: ${name}`);
+      try {
+        // Try destroy() first, fallback to stop()
+        if (typeof job.destroy === 'function') {
+          job.destroy();
+        } else if (typeof job.stop === 'function') {
+          job.stop();
+        }
+        console.log(`Destroyed cron job: ${name}`);
+      } catch (error) {
+        console.error(`Error destroying cron job ${name}:`, error.message);
+      }
     });
 
     this.jobs.clear();
